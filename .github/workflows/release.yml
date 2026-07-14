@@ -25,6 +25,23 @@ jobs:
           APP_BUILD: ${{ github.run_number }}
         run: ./script/package_release.sh "${GITHUB_REF_NAME#v}"
 
+      - name: Verify downloadable archive
+        run: |
+          cd dist/release
+          shasum -a 256 -c SHA256SUMS.txt
+          verify_dir="$RUNNER_TEMP/CodexLoginManager-release-verify"
+          rm -rf "$verify_dir"
+          mkdir -p "$verify_dir"
+          ditto -x -k CodexLoginManager-*.zip "$verify_dir"
+          app="$verify_dir/CodexLoginManager.app"
+          xattr -cr "$app"
+          plutil -lint "$app/Contents/Info.plist"
+          release_version="${GITHUB_REF_NAME#v}"
+          test "$(plutil -extract CFBundleShortVersionString raw "$app/Contents/Info.plist")" = "${release_version%%-*}"
+          test "$(plutil -extract CFBundleVersion raw "$app/Contents/Info.plist")" = "$GITHUB_RUN_NUMBER"
+          codesign --verify --deep --strict "$app"
+          lipo "$app/Contents/MacOS/CodexLoginManager" -verify_arch arm64 x86_64
+
       - name: Publish GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
