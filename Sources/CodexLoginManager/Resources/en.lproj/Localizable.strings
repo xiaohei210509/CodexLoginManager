@@ -45,7 +45,7 @@
 "status.incomplete.title" = "Login state is incomplete";
 "status.incomplete.message" = "auth.json is set to ChatGPT mode but has no usable access_token.";
 "status.unknown.title" = "Unknown login mode";
-"status.unknown.message" = "auth_mode is %@, not ChatGPT OAuth.";
+"status.unknown.message" = "auth.json uses an unsupported login mode, not ChatGPT OAuth.";
 "status.invalid.title" = "Could not parse auth.json";
 "status.invalid.message" = "Check that auth.json contains valid JSON, or use Sign In to let Codex write it again.";
 "auth.missing" = "auth.json does not exist";
@@ -53,9 +53,8 @@
 "auth.chatgpt_token" = "auth_mode = chatgpt, access_token is present";
 "auth.chatgpt_empty" = "auth_mode = chatgpt, but access_token is empty";
 "auth.api_key" = "auth_mode = apikey";
-"auth.mode_unset" = "not set";
 "auth.mode_missing" = "auth_mode is not set";
-"auth.mode_value" = "auth_mode = %@";
+"auth.mode_unknown" = "auth_mode is set to an unsupported value";
 "auth.read_failed" = "Could not read auth.json: %@";
 "activity.check_complete" = "Status check complete: %@";
 "activity.starting_login" = "Starting the official Codex browser login...";

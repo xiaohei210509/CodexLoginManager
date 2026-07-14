@@ -45,7 +45,7 @@
 "status.incomplete.title" = "登录态不完整";
 "status.incomplete.message" = "auth.json 标记为 ChatGPT 模式，但没有可用 access_token。";
 "status.unknown.title" = "未知登录模式";
-"status.unknown.message" = "当前 auth_mode 是 %@，不是 ChatGPT OAuth。";
+"status.unknown.message" = "auth.json 使用了不受支持的登录模式，不是 ChatGPT OAuth。";
 "status.invalid.title" = "auth.json 无法解析";
 "status.invalid.message" = "请检查 auth.json 是否是有效 JSON；也可以点击一键登录让 Codex 重新写入。";
 "auth.missing" = "auth.json 不存在";
@@ -53,9 +53,8 @@
 "auth.chatgpt_token" = "auth_mode = chatgpt，access_token 存在";
 "auth.chatgpt_empty" = "auth_mode = chatgpt，但 access_token 为空";
 "auth.api_key" = "auth_mode = apikey";
-"auth.mode_unset" = "未设置";
 "auth.mode_missing" = "auth_mode 未设置";
-"auth.mode_value" = "auth_mode = %@";
+"auth.mode_unknown" = "auth_mode 已设置为不受支持的值";
 "auth.read_failed" = "读取失败：%@";
 "activity.check_complete" = "状态检查完成：%@";
 "activity.starting_login" = "正在启动官方 Codex 浏览器登录...";

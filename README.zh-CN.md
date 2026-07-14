@@ -40,9 +40,9 @@ Codex 登录管理会显示 Codex CLI 实际正在使用 ChatGPT OAuth、API key
 1. 打开 [Releases 页面](https://github.com/xiaohei210509/CodexLoginManager/releases)。
 2. 下载 `CodexLoginManager-*-macOS-universal.zip`，也可以用 `SHA256SUMS.txt` 校验文件。
 3. 解压后把 `CodexLoginManager.app` 移到 `/Applications`。
-4. 当前社区 beta 首次打开时，请按住 Control 点击应用，选择**打开**并确认。
+4. 先尝试正常打开一次。如果 macOS 阻止启动，请进入**系统设置 > 隐私与安全性**，为 Codex Login Manager 点击**仍要打开**，然后再次确认**打开**。
 
-下载包同时支持 Apple Silicon 和 Intel Mac。它是开源、ad-hoc 签名的社区 beta，目前还没有经过 Apple 公证，因此 macOS 可能显示“无法验证开发者”。不要全局关闭 Gatekeeper。
+下载包同时支持 Apple Silicon 和 Intel Mac。它是开源、ad-hoc 签名的社区 beta，目前还没有经过 Apple 公证，因此 macOS 可能显示“无法验证开发者”。请按 [Apple 的“仍要打开”说明](https://support.apple.com/zh-cn/102445) 操作，不要全局关闭 Gatekeeper。
 
 系统要求为 macOS 14 或更高版本，并且以下任一官方 Codex CLI 可用：
 
@@ -78,7 +78,7 @@ cd CodexLoginManager
 swift test --disable-index-store -j 1
 ./script/build_and_run.sh --build
 ./script/build_and_run.sh --verify
-./script/package_release.sh 1.0.0-beta.1
+./script/package_release.sh 1.0.0-beta.2
 ```
 
 应用会跟随 macOS 语言设置，目前包含英文和简体中文。GitHub Actions 会运行单元测试、构建应用包、验证签名，并为版本 tag 生成 universal2 Release。

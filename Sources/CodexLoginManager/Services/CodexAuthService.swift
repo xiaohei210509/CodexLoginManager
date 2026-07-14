@@ -106,7 +106,12 @@ struct CodexAuthService: Sendable {
         switch cliResult {
         case let .success(result):
             cliText = Redactor.sanitize(result.combinedOutput)
-            cliConfirmed = result.combinedOutput.localizedCaseInsensitiveContains("Logged in using ChatGPT")
+            cliConfirmed = result.exitCode == 0 && result.combinedOutput
+                .components(separatedBy: .newlines)
+                .contains {
+                    $0.trimmingCharacters(in: .whitespacesAndNewlines)
+                        .caseInsensitiveCompare("Logged in using ChatGPT") == .orderedSame
+                }
         case let .failure(error):
             cliText = Redactor.sanitize(error.localizedDescription)
             cliConfirmed = false
@@ -165,11 +170,11 @@ struct CodexAuthService: Sendable {
                 paths: paths,
                 checkedAt: Date()
             )
-        case let .otherMode(mode):
+        case .otherMode:
             return AuthStatus(
                 kind: .needsLogin,
                 title: L10n.text("status.unknown.title"),
-                message: L10n.format("status.unknown.message", mode),
+                message: L10n.text("status.unknown.message"),
                 localAuthSummary: localAuth.displayText,
                 cliStatus: cliText,
                 paths: paths,
@@ -218,12 +223,15 @@ struct CodexAuthService: Sendable {
 
             if authMode.isEmpty {
                 return LocalAuthSummary(
-                    kind: .otherMode(L10n.text("auth.mode_unset")),
+                    kind: .otherMode,
                     displayText: L10n.text("auth.mode_missing")
                 )
             }
 
-            return LocalAuthSummary(kind: .otherMode(authMode), displayText: L10n.format("auth.mode_value", authMode))
+            return LocalAuthSummary(
+                kind: .otherMode,
+                displayText: L10n.text("auth.mode_unknown")
+            )
         } catch {
             return LocalAuthSummary(
                 kind: .invalid(error.localizedDescription),
