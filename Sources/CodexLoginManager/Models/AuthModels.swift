@@ -94,7 +94,7 @@ enum LocalAuthKind: Equatable, Sendable {
     case chatGPTTokenPresent
     case chatGPTMissingToken
     case apiKeyMode
-    case otherMode(String)
+    case otherMode
     case invalid(String)
 }
 

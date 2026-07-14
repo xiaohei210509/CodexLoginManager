@@ -40,9 +40,9 @@ Codex Login Manager shows what the Codex CLI is actually using: ChatGPT OAuth, A
 1. Open the [Releases page](https://github.com/xiaohei210509/CodexLoginManager/releases).
 2. Download `CodexLoginManager-*-macOS-universal.zip` and optionally verify it against `SHA256SUMS.txt`.
 3. Unzip the app and move `CodexLoginManager.app` to `/Applications`.
-4. For the current community beta, Control-click the app, choose **Open**, and confirm the first launch.
+4. Try to open the app once. If macOS blocks it, open **System Settings > Privacy & Security**, click **Open Anyway** for Codex Login Manager, then confirm **Open**.
 
-The downloadable beta is universal for Apple Silicon and Intel Macs. It is open source and ad-hoc signed, but not Apple-notarized yet. macOS may therefore show an unidentified-developer warning. Do not disable Gatekeeper globally.
+The downloadable beta is universal for Apple Silicon and Intel Macs. It is open source and ad-hoc signed, but not Apple-notarized yet. macOS may therefore show an unidentified-developer warning. Follow [Apple's Open Anyway instructions](https://support.apple.com/en-us/102445); do not disable Gatekeeper globally.
 
 Codex Login Manager requires macOS 14 or later and one of these official Codex CLI locations:
 
@@ -78,7 +78,7 @@ Other useful commands:
 swift test --disable-index-store -j 1
 ./script/build_and_run.sh --build
 ./script/build_and_run.sh --verify
-./script/package_release.sh 1.0.0-beta.1
+./script/package_release.sh 1.0.0-beta.2
 ```
 
 The app follows the macOS language setting and currently includes English and Simplified Chinese. GitHub Actions runs unit tests, builds the app bundle, verifies its signature, and packages tagged universal releases.

@@ -79,8 +79,9 @@ cp -X "$ICON_SOURCE" "$APP_RESOURCES/AppIcon.icns"
 /usr/bin/ditto "$RESOURCE_BUNDLE_SOURCE" "$APP_RESOURCES/$RESOURCE_BUNDLE_NAME"
 
 for localization in en zh-Hans; do
-  localization_file="$APP_RESOURCES/$RESOURCE_BUNDLE_NAME/Contents/Resources/$localization.lproj/Localizable.strings"
-  if [[ ! -f "$localization_file" ]]; then
+  localization_file="$(find "$APP_RESOURCES/$RESOURCE_BUNDLE_NAME" \
+    -type f -ipath "*/$localization.lproj/Localizable.strings" -print -quit)"
+  if [[ -z "$localization_file" ]]; then
     echo "Required localization is missing from the app bundle: $localization" >&2
     exit 1
   fi
@@ -134,6 +135,7 @@ if [[ -n "${CODE_SIGN_IDENTITY:-}" ]]; then
 else
   /usr/bin/codesign --force --deep --sign - --timestamp=none "$APP_BUNDLE"
 fi
+/usr/bin/xattr -cr "$APP_BUNDLE"
 /usr/bin/codesign --verify --deep --strict "$APP_BUNDLE"
 
 open_app() {
