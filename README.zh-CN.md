@@ -32,7 +32,7 @@ Codex 登录管理会显示 Codex CLI 实际正在使用 ChatGPT OAuth、API key
 - 显示实际命中的 `ChatGPT.app`、旧 `Codex.app` 或 `PATH` 中的 CLI。
 - 区分 `~/.codex/auth.json` 缺失、损坏、不完整和过期等状态。
 - 启动官方浏览器登录，并在流程结束后自动重新检查。
-- 在界面显示前脱敏 API key、OAuth token 和 JWT。
+- 在界面显示前脱敏已知的 API key、OAuth token 和 JWT 格式，降低意外暴露风险。
 - 不直接修改 `~/.codex/config.toml`。
 
 ## 安装

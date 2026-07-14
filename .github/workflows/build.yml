@@ -38,6 +38,7 @@ jobs:
           mkdir -p "$verify_dir"
           ditto -x -k CodexLoginManager-*.zip "$verify_dir"
           app="$verify_dir/CodexLoginManager.app"
+          xattr -cr "$app"
           plutil -lint "$app/Contents/Info.plist"
           test "$(plutil -extract CFBundleShortVersionString raw "$app/Contents/Info.plist")" = "0.0.0"
           test "$(plutil -extract CFBundleVersion raw "$app/Contents/Info.plist")" = "$GITHUB_RUN_NUMBER"
