@@ -1,0 +1,105 @@
+name: Bug report
+description: Report a reproducible problem with CodexLoginManager
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting a problem.
+
+        **Do not include `auth.json`, API keys, OAuth tokens, JWTs, session cookies, or unredacted logs.** Manually inspect all text and screenshots even if the application redacted them. For a vulnerability or sensitive privacy failure, stop and use a private [GitHub Security Advisory](https://github.com/xiaohei210509/CodexLoginManager/security/advisories/new).
+
+        **请勿上传 `auth.json`、API key、OAuth token、JWT 或未经人工脱敏的日志。**
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Preflight checks
+      options:
+        - label: I searched existing issues and did not find the same problem.
+          required: true
+        - label: This report is not a security vulnerability or sensitive privacy disclosure.
+          required: true
+        - label: I did not include `auth.json`, credentials, tokens, JWTs, or unredacted logs.
+          required: true
+        - label: I manually removed private paths, usernames, account identifiers, and browser data.
+          required: true
+  - type: input
+    id: revision
+    attributes:
+      label: Source revision
+      description: Provide a commit SHA, tag, or branch name.
+      placeholder: e.g. 4a105a8 or main
+    validations:
+      required: true
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version
+      placeholder: e.g. macOS 15.5 (24F74)
+    validations:
+      required: true
+  - type: input
+    id: codex_version
+    attributes:
+      label: Codex CLI version
+      description: Run `codex --version`; do not include login status or credentials.
+      placeholder: e.g. codex-cli 0.x.y
+    validations:
+      required: true
+  - type: dropdown
+    id: cli_installation
+    attributes:
+      label: Codex CLI installation
+      options:
+        - ChatGPT.app in /Applications
+        - Legacy Codex.app in /Applications
+        - Standalone codex on PATH
+        - Other official installation
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Problem description
+      description: Explain what failed and how it affects normal use.
+      placeholder: Describe the problem without including private data.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+      description: Use dummy values and sanitized paths.
+      placeholder: |
+        1. Build with ...
+        2. Open ...
+        3. Select ...
+        4. Observe ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Sanitized diagnostics
+      description: Optional. Include only the minimum manually reviewed output. Do not attach auth.json or raw logs.
+      render: shell
+      placeholder: Replace every private value with <redacted>.
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional context
+      description: Optional screenshots must be manually checked for private data.

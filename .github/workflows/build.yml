@@ -12,7 +12,7 @@ permissions:
 jobs:
   build-and-test:
     runs-on: macos-15
-    timeout-minutes: 15
+    timeout-minutes: 25
 
     steps:
       - name: Check out repository
@@ -24,11 +24,22 @@ jobs:
       - name: Run tests
         run: swift test --scratch-path "$RUNNER_TEMP/CodexLoginManager-tests" --disable-index-store -j 1
 
-      - name: Build app bundle
-        run: ./script/build_and_run.sh --build
+      - name: Build universal release archive
+        env:
+          APP_BUILD: ${{ github.run_number }}
+        run: ./script/package_release.sh "0.0.0-ci.${GITHUB_RUN_ATTEMPT}"
 
-      - name: Verify app bundle
+      - name: Verify release artifacts
         run: |
-          xattr -cr dist/CodexLoginManager.app
-          plutil -lint dist/CodexLoginManager.app/Contents/Info.plist
-          codesign --verify --deep --strict dist/CodexLoginManager.app
+          cd dist/release
+          shasum -a 256 -c SHA256SUMS.txt
+          verify_dir="$RUNNER_TEMP/CodexLoginManager-release-verify"
+          rm -rf "$verify_dir"
+          mkdir -p "$verify_dir"
+          ditto -x -k CodexLoginManager-*.zip "$verify_dir"
+          app="$verify_dir/CodexLoginManager.app"
+          plutil -lint "$app/Contents/Info.plist"
+          test "$(plutil -extract CFBundleShortVersionString raw "$app/Contents/Info.plist")" = "0.0.0"
+          test "$(plutil -extract CFBundleVersion raw "$app/Contents/Info.plist")" = "$GITHUB_RUN_NUMBER"
+          codesign --verify --deep --strict "$app"
+          lipo "$app/Contents/MacOS/CodexLoginManager" -verify_arch arm64 x86_64

@@ -18,17 +18,17 @@ struct ContentView: View {
                 Button {
                     Task { await viewModel.refresh() }
                 } label: {
-                    Label("重新检查", systemImage: "arrow.clockwise")
+                    Label(L10n.text("toolbar.refresh"), systemImage: "arrow.clockwise")
                 }
-                .help("重新检查登录态")
+                .help(L10n.text("toolbar.refresh_help"))
                 .disabled(viewModel.isBusy)
 
                 Button {
                     Task { await viewModel.startLogin() }
                 } label: {
-                    Label("登录", systemImage: "key.fill")
+                    Label(L10n.text("toolbar.login"), systemImage: "key.fill")
                 }
-                .help("启动浏览器登录")
+                .help(L10n.text("toolbar.login_help"))
                 .disabled(!viewModel.canStartLogin)
             }
         }
@@ -36,9 +36,9 @@ struct ContentView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("Codex 登录管理")
+            Text(L10n.text("header.title"))
                 .font(.system(size: 28, weight: .semibold))
-            Text("ChatGPT OAuth")
+            Text(L10n.text("header.subtitle"))
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -87,25 +87,25 @@ struct ContentView: View {
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
             .disabled(!viewModel.canStartLogin)
-            .help("启动 Codex 浏览器登录")
+            .help(L10n.text("action.login_help"))
 
             Button {
                 Task { await viewModel.refresh() }
             } label: {
-                Label("重新检查", systemImage: "arrow.clockwise")
+                Label(L10n.text("toolbar.refresh"), systemImage: "arrow.clockwise")
             }
             .controlSize(.large)
             .disabled(viewModel.isBusy)
-            .help("重新读取 auth.json 并调用 Codex CLI")
+            .help(L10n.text("action.refresh_help"))
 
             Button {
                 viewModel.openCodexApp()
             } label: {
-                Label("打开 Codex", systemImage: "app")
+                Label(L10n.text("action.open_codex"), systemImage: "app")
             }
             .controlSize(.large)
             .disabled(!viewModel.canOpenCodexApp)
-            .help("打开 \(viewModel.status.paths.codexAppPath)")
+            .help(L10n.format("action.open_help", viewModel.status.paths.codexAppPath))
 
             Spacer()
         }
@@ -115,14 +115,14 @@ struct ContentView: View {
         Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 10) {
             GridRow {
                 DetailTile(
-                    title: "本地登录态",
+                    title: L10n.text("detail.local_auth"),
                     value: viewModel.status.localAuthSummary,
                     systemImage: "doc.text.magnifyingglass"
                 )
 
                 DetailTile(
-                    title: "上次检查",
-                    value: viewModel.status.checkedAt?.statusTimestamp ?? "未完成",
+                    title: L10n.text("detail.last_checked"),
+                    value: viewModel.status.checkedAt?.statusTimestamp ?? L10n.text("detail.not_completed"),
                     systemImage: "clock"
                 )
             }
@@ -130,13 +130,13 @@ struct ContentView: View {
             GridRow {
                 DetailTile(
                     title: "auth.json",
-                    value: viewModel.status.paths.authPath,
+                    value: viewModel.status.paths.displayAuthPath,
                     systemImage: "folder"
                 )
 
                 DetailTile(
                     title: "Codex CLI",
-                    value: viewModel.status.paths.codexCLIPath,
+                    value: viewModel.status.paths.displayCLIPath,
                     systemImage: "terminal"
                 )
             }
@@ -144,12 +144,12 @@ struct ContentView: View {
             GridRow {
                 DetailTile(
                     title: "config.toml",
-                    value: "\(viewModel.status.paths.configPath)\n本工具不直接写入此文件",
+                    value: L10n.format("detail.config_note", viewModel.status.paths.displayConfigPath),
                     systemImage: "checklist.unchecked"
                 )
 
                 DetailTile(
-                    title: "CLI 状态",
+                    title: L10n.text("detail.cli_status"),
                     value: viewModel.status.cliStatus,
                     systemImage: "text.badge.checkmark"
                 )
@@ -159,11 +159,11 @@ struct ContentView: View {
 
     private var logPanel: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Label("输出", systemImage: "scroll")
+            Label(L10n.text("detail.output"), systemImage: "scroll")
                 .font(.headline)
 
             ScrollView {
-                Text(viewModel.activityLog.isEmpty ? "暂无输出" : viewModel.activityLog)
+                Text(viewModel.activityLog.isEmpty ? L10n.text("detail.no_output") : viewModel.activityLog)
                     .font(.system(.caption, design: .monospaced))
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -176,7 +176,7 @@ struct ContentView: View {
     }
 
     private var primaryActionTitle: String {
-        viewModel.status.isLoggedIn ? "重新登录" : "一键登录"
+        viewModel.status.isLoggedIn ? L10n.text("action.relogin") : L10n.text("action.login")
     }
 }
 

@@ -34,6 +34,6 @@ final class RedactorTests: XCTestCase {
     }
 
     func testUsesPlaceholderForBlankOutput() {
-        XCTAssertEqual(Redactor.sanitize(" \n\t"), "无输出")
+        XCTAssertEqual(Redactor.sanitize(" \n\t"), L10n.text("redactor.no_output"))
     }
 }

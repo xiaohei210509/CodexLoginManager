@@ -7,9 +7,9 @@ enum ProcessRunnerError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case let .timedOut(command, seconds):
-            return "\(command) 在 \(Int(seconds)) 秒内没有结束。"
+            return L10n.format("process.timed_out", command, Int(seconds))
         case let .launchFailed(command, underlying):
-            return "无法启动 \(command)：\(underlying.localizedDescription)"
+            return L10n.format("process.launch_failed", command, underlying.localizedDescription)
         }
     }
 }

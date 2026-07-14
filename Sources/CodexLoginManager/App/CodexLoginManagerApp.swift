@@ -18,7 +18,7 @@ struct CodexLoginManagerApp: App {
     }
 
     var body: some Scene {
-        WindowGroup("Codex 登录管理") {
+        WindowGroup(L10n.text("app.window_title")) {
             ContentView(viewModel: viewModel)
                 .frame(minWidth: 660, minHeight: 500)
                 .task {
@@ -27,12 +27,12 @@ struct CodexLoginManagerApp: App {
         }
         .commands {
             CommandGroup(after: .appInfo) {
-                Button("重新检查登录态") {
+                Button(L10n.text("menu.refresh")) {
                     Task { await viewModel.refresh() }
                 }
                 .keyboardShortcut("r", modifiers: [.command])
 
-                Button("启动浏览器登录") {
+                Button(L10n.text("menu.login")) {
                     Task { await viewModel.startLogin() }
                 }
                 .keyboardShortcut("l", modifiers: [.command])
