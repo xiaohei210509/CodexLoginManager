@@ -26,7 +26,7 @@ final class AuthViewModel: ObservableObject {
         isBusy = true
         status = .checking(paths: service.paths)
         status = await service.checkStatus()
-        activityLog = "状态检查完成：\(status.title)"
+        activityLog = L10n.format("activity.check_complete", status.title)
         isBusy = false
     }
 
@@ -34,7 +34,7 @@ final class AuthViewModel: ObservableObject {
         guard canStartLogin else { return }
         isBusy = true
         status = .loginRunning(paths: service.paths)
-        activityLog = "正在启动 Codex 浏览器登录..."
+        activityLog = L10n.text("activity.starting_login")
 
         let result = await service.startLogin()
         status = result.status

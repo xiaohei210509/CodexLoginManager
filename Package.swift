@@ -4,6 +4,7 @@ import PackageDescription
 
 let package = Package(
     name: "CodexLoginManager",
+    defaultLocalization: "en",
     platforms: [
         .macOS(.v14)
     ],
@@ -15,7 +16,10 @@ let package = Package(
     ],
     targets: [
         .executableTarget(
-            name: "CodexLoginManager"
+            name: "CodexLoginManager",
+            resources: [
+                .process("Resources")
+            ]
         ),
         .testTarget(
             name: "CodexLoginManagerTests",

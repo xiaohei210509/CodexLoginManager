@@ -17,10 +17,10 @@ struct CodexAuthService: Sendable {
         guard FileManager.default.isExecutableFile(atPath: paths.codexCLIPath) else {
             return AuthStatus(
                 kind: .missingCLI,
-                title: "找不到 Codex CLI",
-                message: "没有找到 ChatGPT/Codex app 内置的命令行工具，也没有在 PATH 中找到 codex。",
+                title: L10n.text("status.missing_cli.title"),
+                message: L10n.text("status.missing_cli.message"),
                 localAuthSummary: readLocalAuthSummary().displayText,
-                cliStatus: paths.codexCLIPath,
+                cliStatus: paths.displayCLIPath,
                 paths: paths,
                 checkedAt: Date()
             )
@@ -48,14 +48,14 @@ struct CodexAuthService: Sendable {
             return (
                 status: AuthStatus(
                     kind: .missingCLI,
-                    title: "找不到 Codex CLI",
-                    message: "无法启动登录流程，请先确认 ChatGPT.app 安装在 /Applications，或 codex 在 PATH 中可执行。",
+                    title: L10n.text("status.missing_cli.title"),
+                    message: L10n.text("status.missing_cli.login_message"),
                     localAuthSummary: readLocalAuthSummary().displayText,
-                    cliStatus: paths.codexCLIPath,
+                    cliStatus: paths.displayCLIPath,
                     paths: paths,
                     checkedAt: Date()
                 ),
-                log: "Codex CLI 不存在：\(paths.codexCLIPath)"
+                log: L10n.format("status.missing_cli.log", paths.displayCLIPath)
             )
         }
 
@@ -68,7 +68,9 @@ struct CodexAuthService: Sendable {
 
             let refreshed = await checkStatus()
             let output = Redactor.sanitize(result.combinedOutput)
-            let prefix = result.exitCode == 0 ? "codex login 已结束。" : "codex login 退出码：\(result.exitCode)。"
+            let prefix = result.exitCode == 0
+                ? L10n.text("status.login.finished")
+                : L10n.format("status.login.exit", result.exitCode)
 
             return (status: refreshed, log: "\(prefix)\n\(output)")
         } catch {
@@ -76,7 +78,7 @@ struct CodexAuthService: Sendable {
             return (
                 status: AuthStatus(
                     kind: .failed,
-                    title: "登录启动失败",
+                    title: L10n.text("status.login.failed_title"),
                     message: error.localizedDescription,
                     localAuthSummary: refreshed.localAuthSummary,
                     cliStatus: refreshed.cliStatus,
@@ -113,8 +115,8 @@ struct CodexAuthService: Sendable {
         if cliConfirmed {
             return AuthStatus(
                 kind: .loggedIn,
-                title: "已登录：ChatGPT",
-                message: "Codex CLI 已确认当前是 ChatGPT OAuth 登录态。",
+                title: L10n.text("status.logged_in.title"),
+                message: L10n.text("status.logged_in.message"),
                 localAuthSummary: localAuth.displayText,
                 cliStatus: cliText,
                 paths: paths,
@@ -126,8 +128,8 @@ struct CodexAuthService: Sendable {
         case .missing:
             return AuthStatus(
                 kind: .missingAuth,
-                title: "需要登录",
-                message: "没有找到 auth.json，点击一键登录会启动浏览器授权。",
+                title: L10n.text("status.needs_login.title"),
+                message: L10n.text("status.needs_login.message"),
                 localAuthSummary: localAuth.displayText,
                 cliStatus: cliText,
                 paths: paths,
@@ -136,8 +138,8 @@ struct CodexAuthService: Sendable {
         case .apiKeyMode:
             return AuthStatus(
                 kind: .apiKeyMode,
-                title: "当前是 API key 模式",
-                message: "未检测到 ChatGPT OAuth 登录态；可点击一键登录写入登录态，当前工具不会直接修改 config.toml。",
+                title: L10n.text("status.api_key.title"),
+                message: L10n.text("status.api_key.message"),
                 localAuthSummary: localAuth.displayText,
                 cliStatus: cliText,
                 paths: paths,
@@ -146,8 +148,8 @@ struct CodexAuthService: Sendable {
         case .chatGPTTokenPresent:
             return AuthStatus(
                 kind: .needsLogin,
-                title: "登录态需要刷新",
-                message: "auth.json 里有 ChatGPT token，但 Codex CLI 没有确认有效，建议重新登录。",
+                title: L10n.text("status.refresh.title"),
+                message: L10n.text("status.refresh.message"),
                 localAuthSummary: localAuth.displayText,
                 cliStatus: cliText,
                 paths: paths,
@@ -156,8 +158,8 @@ struct CodexAuthService: Sendable {
         case .chatGPTMissingToken:
             return AuthStatus(
                 kind: .needsLogin,
-                title: "登录态不完整",
-                message: "auth.json 标记为 ChatGPT 模式，但没有可用 access_token。",
+                title: L10n.text("status.incomplete.title"),
+                message: L10n.text("status.incomplete.message"),
                 localAuthSummary: localAuth.displayText,
                 cliStatus: cliText,
                 paths: paths,
@@ -166,8 +168,8 @@ struct CodexAuthService: Sendable {
         case let .otherMode(mode):
             return AuthStatus(
                 kind: .needsLogin,
-                title: "未知登录模式",
-                message: "当前 auth_mode 是 \(mode)，不是 ChatGPT OAuth。",
+                title: L10n.text("status.unknown.title"),
+                message: L10n.format("status.unknown.message", mode),
                 localAuthSummary: localAuth.displayText,
                 cliStatus: cliText,
                 paths: paths,
@@ -176,8 +178,8 @@ struct CodexAuthService: Sendable {
         case .invalid:
             return AuthStatus(
                 kind: .invalidAuth,
-                title: "auth.json 无法解析",
-                message: "请检查 auth.json 是否是有效 JSON；也可以直接点击一键登录让 Codex 重新写入。",
+                title: L10n.text("status.invalid.title"),
+                message: L10n.text("status.invalid.message"),
                 localAuthSummary: localAuth.displayText,
                 cliStatus: cliText,
                 paths: paths,
@@ -188,14 +190,14 @@ struct CodexAuthService: Sendable {
 
     private func readLocalAuthSummary() -> LocalAuthSummary {
         guard FileManager.default.fileExists(atPath: paths.authPath) else {
-            return LocalAuthSummary(kind: .missing, displayText: "auth.json 不存在")
+            return LocalAuthSummary(kind: .missing, displayText: L10n.text("auth.missing"))
         }
 
         do {
             let data = try Data(contentsOf: URL(fileURLWithPath: paths.authPath))
             let object = try JSONSerialization.jsonObject(with: data)
             guard let root = object as? [String: Any] else {
-                return LocalAuthSummary(kind: .invalid("root"), displayText: "auth.json 不是 JSON 对象")
+                return LocalAuthSummary(kind: .invalid("root"), displayText: L10n.text("auth.not_object"))
             }
 
             let authMode = root["auth_mode"] as? String ?? ""
@@ -203,24 +205,30 @@ struct CodexAuthService: Sendable {
             let accessToken = tokens?["access_token"] as? String ?? ""
 
             if authMode == "chatgpt", !accessToken.isEmpty {
-                return LocalAuthSummary(kind: .chatGPTTokenPresent, displayText: "auth_mode = chatgpt，access_token 存在")
+                return LocalAuthSummary(kind: .chatGPTTokenPresent, displayText: L10n.text("auth.chatgpt_token"))
             }
 
             if authMode == "chatgpt" {
-                return LocalAuthSummary(kind: .chatGPTMissingToken, displayText: "auth_mode = chatgpt，但 access_token 为空")
+                return LocalAuthSummary(kind: .chatGPTMissingToken, displayText: L10n.text("auth.chatgpt_empty"))
             }
 
             if authMode == "apikey" {
-                return LocalAuthSummary(kind: .apiKeyMode, displayText: "auth_mode = apikey")
+                return LocalAuthSummary(kind: .apiKeyMode, displayText: L10n.text("auth.api_key"))
             }
 
             if authMode.isEmpty {
-                return LocalAuthSummary(kind: .otherMode("未设置"), displayText: "auth_mode 未设置")
+                return LocalAuthSummary(
+                    kind: .otherMode(L10n.text("auth.mode_unset")),
+                    displayText: L10n.text("auth.mode_missing")
+                )
             }
 
-            return LocalAuthSummary(kind: .otherMode(authMode), displayText: "auth_mode = \(authMode)")
+            return LocalAuthSummary(kind: .otherMode(authMode), displayText: L10n.format("auth.mode_value", authMode))
         } catch {
-            return LocalAuthSummary(kind: .invalid(error.localizedDescription), displayText: "读取失败：\(error.localizedDescription)")
+            return LocalAuthSummary(
+                kind: .invalid(error.localizedDescription),
+                displayText: L10n.format("auth.read_failed", error.localizedDescription)
+            )
         }
     }
 }

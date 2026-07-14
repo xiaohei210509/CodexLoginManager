@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/xiaohei210509/CodexLoginManager/security/advisories/new
+    about: Privately report credential exposure, unsafe execution, or another sensitive security issue.
+  - name: Read the troubleshooting guide
+    url: https://github.com/xiaohei210509/CodexLoginManager/blob/main/docs/TROUBLESHOOTING.md
+    about: Check CLI discovery, login, build, and signing guidance before opening an issue.
+  - name: Ask a non-sensitive support question
+    url: https://github.com/xiaohei210509/CodexLoginManager/issues/new?template=bug_report.yml
+    about: Use a structured issue form and include only manually sanitized information.

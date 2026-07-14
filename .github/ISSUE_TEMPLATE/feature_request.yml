@@ -1,0 +1,55 @@
+name: Feature request
+description: Propose a focused improvement to CodexLoginManager
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Explain the user problem before proposing an implementation. CodexLoginManager is intentionally local-first and delegates authentication to the official Codex CLI.
+
+        **Never include `auth.json`, API keys, OAuth tokens, JWTs, or unredacted logs in a feature request.**
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Preflight checks
+      options:
+        - label: I searched existing issues and did not find the same request.
+          required: true
+        - label: I did not include credentials, tokens, `auth.json`, JWTs, or unredacted logs.
+          required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: User problem
+      description: What workflow is difficult or impossible today?
+      placeholder: Describe the user need without assuming a specific solution.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Describe the observable behavior and user experience.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Include current workarounds or smaller options.
+    validations:
+      required: true
+  - type: textarea
+    id: privacy_security
+    attributes:
+      label: Privacy and security impact
+      description: Explain any new file access, process execution, network behavior, persistence, permissions, or credential handling. Write "None" only after considering each category.
+    validations:
+      required: true
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional context
+      description: Optional mockups or examples must contain synthetic data only.

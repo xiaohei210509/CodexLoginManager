@@ -38,6 +38,6 @@ enum Redactor {
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
 
-        return lines.isEmpty ? "无输出" : lines.joined(separator: "\n")
+        return lines.isEmpty ? L10n.text("redactor.no_output") : lines.joined(separator: "\n")
     }
 }

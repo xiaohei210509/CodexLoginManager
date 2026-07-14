@@ -21,6 +21,27 @@ struct CodexPaths: Equatable, Sendable {
         FileManager.default.fileExists(atPath: codexAppPath)
     }
 
+    var displayAuthPath: String {
+        Self.abbreviatingHomeDirectory(in: authPath)
+    }
+
+    var displayConfigPath: String {
+        Self.abbreviatingHomeDirectory(in: configPath)
+    }
+
+    var displayCLIPath: String {
+        Self.abbreviatingHomeDirectory(in: codexCLIPath)
+    }
+
+    static func abbreviatingHomeDirectory(in path: String) -> String {
+        let homePath = FileManager.default.homeDirectoryForCurrentUser.path
+        guard path == homePath || path.hasPrefix(homePath + "/") else {
+            return path
+        }
+
+        return "~" + path.dropFirst(homePath.count)
+    }
+
     private static func resolvedCodexInstall() -> (cliPath: String, appPath: String) {
         let fileManager = FileManager.default
         let appCandidates = [
@@ -118,10 +139,10 @@ struct AuthStatus: Equatable, Sendable {
     static func checking(paths: CodexPaths) -> AuthStatus {
         AuthStatus(
             kind: .checking,
-            title: "正在检查",
-            message: "正在读取本机 Codex 登录态并调用 Codex CLI 确认状态。",
-            localAuthSummary: "待检查",
-            cliStatus: "待检查",
+            title: L10n.text("status.checking.title"),
+            message: L10n.text("status.checking.message"),
+            localAuthSummary: L10n.text("status.pending"),
+            cliStatus: L10n.text("status.pending"),
             paths: paths,
             checkedAt: nil
         )
@@ -130,10 +151,10 @@ struct AuthStatus: Equatable, Sendable {
     static func loginRunning(paths: CodexPaths) -> AuthStatus {
         AuthStatus(
             kind: .loginRunning,
-            title: "登录流程运行中",
-            message: "浏览器登录流程已启动，完成授权后这里会自动重新检查。",
-            localAuthSummary: "等待 Codex 写入登录态",
-            cliStatus: "codex login 正在运行",
+            title: L10n.text("status.login_running.title"),
+            message: L10n.text("status.login_running.message"),
+            localAuthSummary: L10n.text("status.login_running.local"),
+            cliStatus: L10n.text("status.login_running.cli"),
             paths: paths,
             checkedAt: nil
         )

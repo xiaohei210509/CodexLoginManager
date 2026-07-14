@@ -1,43 +1,70 @@
 <p align="center">
-  <img src="Resources/AppIcon.png" width="128" height="128" alt="CodexLoginManager icon">
+  <img src="Resources/AppIcon.png" width="128" height="128" alt="Codex Login Manager icon">
 </p>
 
-<h1 align="center">CodexLoginManager</h1>
+<h1 align="center">Codex Login Manager for macOS</h1>
 
 <p align="center">
-  一个原生 macOS SwiftUI 小工具，用于检查 Codex CLI 登录状态并启动官方 ChatGPT OAuth 登录流程。
+  Diagnose Codex CLI authentication and restart the official ChatGPT OAuth flow in one click.
 </p>
 
 <p align="center">
+  <a href="README.zh-CN.md">简体中文</a>
+  ·
+  <a href="https://github.com/xiaohei210509/CodexLoginManager/releases"><strong>Download for macOS</strong></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/xiaohei210509/CodexLoginManager/releases"><img src="https://img.shields.io/github/v/release/xiaohei210509/CodexLoginManager?include_prereleases&label=release" alt="Latest release"></a>
+  <a href="https://github.com/xiaohei210509/CodexLoginManager/releases"><img src="https://img.shields.io/github/downloads/xiaohei210509/CodexLoginManager/total" alt="Downloads"></a>
   <a href="https://github.com/xiaohei210509/CodexLoginManager/actions/workflows/build.yml"><img src="https://github.com/xiaohei210509/CodexLoginManager/actions/workflows/build.yml/badge.svg" alt="Build"></a>
   <img src="https://img.shields.io/badge/macOS-14%2B-000000?logo=apple" alt="macOS 14+">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>
 </p>
 
-CodexLoginManager 不自行实现或接管 OAuth。它只读取本机登录状态，并调用官方 `codex` 命令执行 `login status` 或 `login`。
+![Codex Login Manager showing a confirmed ChatGPT OAuth login and the detected Codex CLI](docs/images/app-screenshot.png)
 
-## 功能
+Codex Login Manager shows what the Codex CLI is actually using: ChatGPT OAuth, API-key mode, an incomplete `auth.json`, or a missing CLI. It then starts the official `codex login` flow and checks the result again. It does not implement OAuth itself, receive your password, or upload credentials.
 
-- 自动查找新版 ChatGPT app、旧版 Codex app 或 `PATH` 中的 Codex CLI。
-- 检查 `~/.codex/auth.json` 中的登录模式，但不显示或保存 token 内容。
-- 调用 `codex login status` 确认 ChatGPT OAuth 登录是否有效。
-- 一键启动官方 `codex login` 浏览器授权流程。
-- 对界面中显示的 API key、OAuth token 和 JWT 进行脱敏。
-- 不直接修改 `~/.codex/config.toml`，不包含遥测或第三方网络请求。
+## Why use this instead of only running `codex login`?
 
-## 系统要求
+- See whether Codex is using ChatGPT OAuth or an API key.
+- Find the active CLI inside `ChatGPT.app`, the legacy `Codex.app`, or your `PATH`.
+- Distinguish a missing, malformed, incomplete, or stale `~/.codex/auth.json`.
+- Start the official browser login and automatically re-check when it finishes.
+- Inspect command output with known API-key, OAuth-token, and JWT patterns redacted to reduce accidental exposure.
+- Keep `~/.codex/config.toml` untouched.
 
-- macOS 14 或更高版本
-- Swift 6 / Xcode 16 或更高版本
-- 以下任意一种 Codex CLI 安装方式：
+## Install
 
-| 安装方式 | CLI 路径 |
+1. Open the [Releases page](https://github.com/xiaohei210509/CodexLoginManager/releases).
+2. Download `CodexLoginManager-*-macOS-universal.zip` and optionally verify it against `SHA256SUMS.txt`.
+3. Unzip the app and move `CodexLoginManager.app` to `/Applications`.
+4. For the current community beta, Control-click the app, choose **Open**, and confirm the first launch.
+
+The downloadable beta is universal for Apple Silicon and Intel Macs. It is open source and ad-hoc signed, but not Apple-notarized yet. macOS may therefore show an unidentified-developer warning. Do not disable Gatekeeper globally.
+
+Codex Login Manager requires macOS 14 or later and one of these official Codex CLI locations:
+
+| Installation | CLI path |
 | --- | --- |
-| ChatGPT app（当前版本） | `/Applications/ChatGPT.app/Contents/Resources/codex` |
-| Codex app（兼容旧版本） | `/Applications/Codex.app/Contents/Resources/codex` |
-| 独立 CLI | `PATH` 中可执行的 `codex` |
+| Current ChatGPT app | `/Applications/ChatGPT.app/Contents/Resources/codex` |
+| Legacy Codex app | `/Applications/Codex.app/Contents/Resources/codex` |
+| Standalone CLI | An executable `codex` in `PATH` |
 
-## 从源码运行
+## Privacy and security
+
+- Reads `~/.codex/auth.json` locally to identify the authentication mode.
+- Runs the installed official `codex login status` and `codex login` commands.
+- Redacts named secrets, OpenAI-style API keys, and JWTs before displaying CLI output.
+- Does not write to `~/.codex/config.toml`.
+- Has no analytics, account system, project server, or third-party network request of its own.
+
+Do not attach `auth.json`, API keys, OAuth tokens, JWTs, or unredacted logs to a public issue. See [Privacy](docs/PRIVACY.md) and [Security](SECURITY.md) for the exact trust boundary.
+
+## Build from source
+
+Requirements: macOS 14+, Swift 6, and Xcode 16 or newer.
 
 ```bash
 git clone https://github.com/xiaohei210509/CodexLoginManager.git
@@ -45,39 +72,27 @@ cd CodexLoginManager
 ./script/build_and_run.sh
 ```
 
-脚本会在 `dist/CodexLoginManager.app` 生成本地 ad-hoc 签名的应用并启动它。
-
-仅构建应用包：
-
-```bash
-./script/build_and_run.sh --build
-```
-
-构建并检查应用能否启动：
-
-```bash
-./script/build_and_run.sh --verify
-```
-
-## 开发与测试
+Other useful commands:
 
 ```bash
 swift test --disable-index-store -j 1
+./script/build_and_run.sh --build
+./script/build_and_run.sh --verify
+./script/package_release.sh 1.0.0-beta.1
 ```
 
-GitHub Actions 会在 macOS runner 上运行单元测试、构建 `.app` 包，并验证其签名和 `Info.plist`。
+The app follows the macOS language setting and currently includes English and Simplified Chinese. GitHub Actions runs unit tests, builds the app bundle, verifies its signature, and packages tagged universal releases.
 
-## 隐私与安全
+## Help and contributing
 
-- 应用只在本机读取 `~/.codex/auth.json`，不会把文件内容发送到自己的服务器。
-- 浏览器授权由官方 Codex CLI 发起；本应用不接收 GitHub、ChatGPT 或 OpenAI 密码。
-- CLI 输出在显示前会经过脱敏，但仍建议不要把包含个人路径或账户状态的截图公开发布。
-- 本项目初始版本只发布源码，不提供经过 Apple Developer ID 签名或公证的二进制文件。
+- [Troubleshooting](docs/TROUBLESHOOTING.md)
+- [Privacy details](docs/PRIVACY.md)
+- [Security policy](SECURITY.md)
+- [Contributing guide](CONTRIBUTING.md)
+- [Changelog](CHANGELOG.md)
 
-## 许可证
+Bug reports and focused pull requests are welcome. Please follow the issue templates so logs and authentication data stay safely redacted.
 
-本项目使用 [MIT License](LICENSE)。
+## License and trademark notice
 
-## 声明
-
-这是一个独立的社区项目，不是 OpenAI 官方产品，也不代表 OpenAI。ChatGPT、Codex 和 OpenAI 是其各自权利人的商标。
+Codex Login Manager is available under the [MIT License](LICENSE). It is an independent community project, not an official OpenAI product and not affiliated with or endorsed by OpenAI. ChatGPT, Codex, and OpenAI are trademarks of their respective owners.
