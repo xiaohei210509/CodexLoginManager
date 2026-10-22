@@ -62,13 +62,14 @@ invalidate a credential that has already been disclosed.
 
 ## Security Boundaries
 
-The local development Dictation Patch tab executes a selected local patch tool.
+The Dictation Patch tab, included starting with v1.0.0-beta.3, executes a selected local patch tool.
 Unlike login diagnostics, enable/disable/recover explicitly modify the installed
 Codex application. The tool requires a supported build and a stopped Codex UI,
 validates staged code signatures, retains account/workspace checks, and supports
 rollback. Enabling uses local signing rather than OpenAI's release identity;
 permissions and some system integrations may be affected. Use only patch
-resources you trust. This functionality has not been published as a new release.
+resources you trust. Downloadable releases include the management interface only;
+the external tool, original backups, and patched Codex bundles are not distributed.
 
 CodexLoginManager:
 

@@ -53,13 +53,13 @@ Codex Login Manager requires macOS 14 or later and one of these official Codex C
 | Older app layout | `Contents/Resources/codex` |
 | Standalone CLI | `PATH`, Homebrew, `~/.local/bin`, Volta, or nvm installations |
 
-The local development build checks system and user Applications folders and
+Starting with v1.0.0-beta.3, the app checks system and user Applications folders and
 rediscovers the CLI on refresh. Finder launches do not require shell startup
-files to expose nvm. These discovery changes are not a new published release.
+files to expose nvm.
 
 ## Local dictation patch management
 
-The local development build adds a Dictation Patch tab for status, supported build,
+Version v1.0.0-beta.3 adds a Dictation Patch tab for status, supported build,
 backup readiness, enable/disable, and interrupted-transaction recovery. It calls the
 prepared local `codex-dictation-research/dictation-patch.mjs` tool; the resource folder
 can be changed in the UI. Official application bundles are not included in this repository.
@@ -68,8 +68,10 @@ The local tool is not bundled; see the [tool protocol and trust requirements](do
 Enabling replaces the installed Codex with a locally signed build. Permissions or
 sign-in may be requested again, and some system integrations may be unavailable.
 Disabling restores the official backup. Account/workspace checks remain intact, and
-real transcription still requires manual verification. This is a local development
-feature, not a new public release.
+real transcription still requires manual verification. The downloadable app includes
+the management interface only, not a ready-to-use dictation patch. Without a
+separately prepared trusted tool, the patch tab reports missing resources while
+login diagnostics remain available. This is not a system-wide dictation app.
 
 ## Privacy and security
 
@@ -97,7 +99,7 @@ Other useful commands:
 swift test --disable-index-store -j 1
 ./script/build_and_run.sh --build
 ./script/build_and_run.sh --verify
-./script/package_release.sh 1.0.0-beta.2
+./script/package_release.sh 1.0.0-beta.3
 ```
 
 The app follows the macOS language setting and currently includes English and Simplified Chinese. GitHub Actions runs unit tests, builds the app bundle, verifies its signature, and packages tagged universal releases.

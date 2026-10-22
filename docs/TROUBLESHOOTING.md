@@ -15,7 +15,7 @@ and browser data from text and screenshots.
 
 ## Confirm the Codex CLI Installation
 
-The local development build checks each `ChatGPT.app` and `Codex.app` in
+Starting with v1.0.0-beta.3, the app checks each `ChatGPT.app` and `Codex.app` in
 system and user Applications folders for these relative paths:
 
 1. `Contents/Resources/codex-cli/bin/codex`
@@ -24,7 +24,8 @@ system and user Applications folders for these relative paths:
 
 It then checks `PATH`, common Homebrew directories, `~/.local/bin`, Volta,
 and nvm installations. nvm versions are checked newest first using numeric
-version ordering. The published beta may still use the older discovery logic.
+version ordering. Versions beta.1 and beta.2 use the older discovery logic;
+update to beta.3 or newer if a current bundled CLI is not detected.
 
 Check the app-bundled locations without printing authentication data:
 

@@ -53,12 +53,12 @@ Codex 登录管理会显示 Codex CLI 实际正在使用 ChatGPT OAuth、API key
 | 旧版 app 布局 | `Contents/Resources/codex` |
 | 独立 CLI | `PATH`、Homebrew、`~/.local/bin`、Volta 或 nvm 安装目录 |
 
-本地开发版同时检查系统和用户的 Applications 目录，每次刷新都会重新查找 CLI。
-从 Finder 启动也无需先加载 shell 配置才能找到 nvm；这些改动尚未发布为新版。
+从 v1.0.0-beta.3 起，应用同时检查系统和用户的 Applications 目录，每次刷新都会重新查找 CLI。
+从 Finder 启动也无需先加载 shell 配置才能找到 nvm。
 
 ## 本地听写补丁管理
 
-本地开发版新增“听写补丁”页面，可查看补丁状态、支持版本和备份状态，
+v1.0.0-beta.3 新增“听写补丁”页面，可查看补丁状态、支持版本和备份状态，
 并在 Codex 完全退出后开启、关闭或恢复中断的切换。原来的登录页面保持独立。
 它调用本机已准备的 `codex-dictation-research/dictation-patch.mjs` 工具，
 可以通过页面中的文件夹按钮选择资源目录；没有把官方安装包放入本项目。
@@ -66,8 +66,9 @@ Codex 登录管理会显示 Codex CLI 实际正在使用 ChatGPT OAuth、API key
 
 开启补丁会改变 Codex 安装并使用本地签名，可能需要重新授予权限或登录，
 部分系统集成可能不可用；关闭恢复官方备份。账号和工作区限制不变，
-真实转写仍须手动验证。本功能与仅诊断登录态的原公开 beta 范围不同，
-目前没有发布新版或上传补丁产物。
+真实转写仍须手动验证。下载包仅包含管理界面，不是开箱即用的听写补丁；
+没有另行准备可信工具时，补丁页会提示资源缺失，原有登录诊断仍可使用。
+本应用不包含全局听写功能，也不分发补丁工具、原版备份或修改版 Codex。
 
 ## 隐私与安全
 
@@ -95,7 +96,7 @@ cd CodexLoginManager
 swift test --disable-index-store -j 1
 ./script/build_and_run.sh --build
 ./script/build_and_run.sh --verify
-./script/package_release.sh 1.0.0-beta.2
+./script/package_release.sh 1.0.0-beta.3
 ```
 
 应用会跟随 macOS 语言设置，目前包含英文和简体中文。GitHub Actions 会运行单元测试、构建应用包、验证签名，并为版本 tag 生成 universal2 Release。

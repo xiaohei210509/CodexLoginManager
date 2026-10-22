@@ -48,7 +48,7 @@ this project.
 
 ## Data the Application Writes
 
-The local development build also offers a Dictation Patch tab. It calls a
+Starting with v1.0.0-beta.3, the app also offers a Dictation Patch tab. It calls a
 user-selected local `dictation-patch.mjs` tool with a structured status, enable,
 disable, or recover command. Status reads application metadata, ASAR hashes,
 backup presence, filesystem permissions, and process executable paths. It does
