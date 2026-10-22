@@ -33,7 +33,13 @@ struct ProcessRunner: Sendable {
 
             var environment = ProcessInfo.processInfo.environment
             environment["HOME"] = FileManager.default.homeDirectoryForCurrentUser.path
-            environment["PATH"] = "/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin:/usr/local/bin"
+            // npm entrypoints use /usr/bin/env node; Finder does not inherit nvm's PATH.
+            let executableDirectory = URL(fileURLWithPath: executablePath)
+                .deletingLastPathComponent().path
+            environment["PATH"] = [
+                executableDirectory,
+                "/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin:/usr/local/bin",
+            ].joined(separator: ":")
             process.environment = environment
 
             do {

@@ -15,38 +15,43 @@ and browser data from text and screenshots.
 
 ## Confirm the Codex CLI Installation
 
-CodexLoginManager checks these locations in order:
+The local development build checks each `ChatGPT.app` and `Codex.app` in
+system and user Applications folders for these relative paths:
 
-1. `/Applications/ChatGPT.app/Contents/Resources/codex`
-2. `/Applications/Codex.app/Contents/Resources/codex`
-3. An executable named `codex` on `PATH`
+1. `Contents/Resources/codex-cli/bin/codex`
+2. `Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex`
+3. `Contents/Resources/codex` (older layouts)
+
+It then checks `PATH`, common Homebrew directories, `~/.local/bin`, Volta,
+and nvm installations. nvm versions are checked newest first using numeric
+version ordering. The published beta may still use the older discovery logic.
 
 Check the app-bundled locations without printing authentication data:
 
 ```bash
-test -x /Applications/ChatGPT.app/Contents/Resources/codex && echo "ChatGPT CLI found"
-test -x /Applications/Codex.app/Contents/Resources/codex && echo "Legacy Codex CLI found"
+test -x /Applications/ChatGPT.app/Contents/Resources/codex-cli/bin/codex && echo "ChatGPT CLI found"
+test -x /Applications/Codex.app/Contents/Resources/codex-cli/bin/codex && echo "Codex CLI found"
 command -v codex
 ```
 
 Print only the CLI version:
 
 ```bash
-/Applications/ChatGPT.app/Contents/Resources/codex --version
+/Applications/ChatGPT.app/Contents/Resources/codex-cli/bin/codex --version
 ```
 
 If the first path is absent, use the path reported by `command -v codex` or the
-legacy app path. Do not create or download an unofficial executable to satisfy
+another supported bundled path. Do not create or download an unofficial executable to satisfy
 the check.
 
 ## "Codex CLI Not Found"
 
-- Confirm ChatGPT.app is installed in `/Applications`, not only in Downloads or
-  another user's Applications folder.
-- If using the standalone CLI, launch CodexLoginManager from an environment
-  where the CLI is available on the standard `PATH`.
+- Confirm ChatGPT.app or Codex.app is installed in `/Applications` or your own
+  `~/Applications`, not only in Downloads or another user's Applications folder.
+- Common standalone installations are discovered even when Finder's `PATH`
+  omits them; custom installations must expose `codex` on the app's `PATH`.
 - Confirm the candidate is executable with `test -x PATH_TO_CODEX`.
-- Rebuild and reopen the app after changing the CLI installation.
+- Click Refresh after changing the CLI installation. Rebuilding is not required.
 
 The app deliberately does not search arbitrary directories or execute a path
 provided by a remote service.

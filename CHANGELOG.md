@@ -6,6 +6,37 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+### Added
+
+- Added a bilingual Dictation Patch tab alongside the existing login manager,
+  with status refresh, version and backup information, a resource-folder picker,
+  confirmed enable/disable actions, and interrupted-transaction recovery.
+- Added a versioned JSON interface for a separately prepared local patch tool.
+  The tool, official application backups, and patched application bundles are
+  not included in the repository or downloadable app.
+- Added coverage for patch status policy, protocol decoding, missing tool/runtime
+  errors, CLI installation layouts, Finder launches, nvm version ordering, and
+  sibling runtime discovery.
+
+### Fixed
+
+- Recognize the current bundled `codex-cli/bin/codex` wrapper and native
+  `CodexCLI.app` executable while retaining the older bundled CLI layout.
+- Discover system and user Applications folders, Homebrew, user-local, Volta,
+  and nvm installations without relying on shell startup files.
+- Rediscover the CLI when refreshing instead of retaining a stale path after
+  an installation layout changes.
+- Include the selected executable's directory in the restricted child-process
+  `PATH`, allowing npm/nvm entrypoints to find their sibling Node runtime.
+
+### Safety
+
+- Keep login and patch mutation controls mutually disabled during operations.
+  Patch switching is unavailable while Codex is running, for unsupported builds,
+  or when required local resources are unavailable.
+- Document the external tool protocol, trust boundary, local-signing effects,
+  and the difference between source changes and published release assets.
+
 ## [1.0.0-beta.2] - 2026-07-14
 
 ### Security

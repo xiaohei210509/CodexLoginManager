@@ -29,7 +29,7 @@ Codex Login Manager shows what the Codex CLI is actually using: ChatGPT OAuth, A
 ## Why use this instead of only running `codex login`?
 
 - See whether Codex is using ChatGPT OAuth or an API key.
-- Find the active CLI inside `ChatGPT.app`, the legacy `Codex.app`, or your `PATH`.
+- Find the CLI inside `ChatGPT.app` or `Codex.app`, on `PATH`, or in common standalone installation locations.
 - Distinguish a missing, malformed, incomplete, or stale `~/.codex/auth.json`.
 - Start the official browser login and automatically re-check when it finishes.
 - Inspect command output with known API-key, OAuth-token, and JWT patterns redacted to reduce accidental exposure.
@@ -48,9 +48,28 @@ Codex Login Manager requires macOS 14 or later and one of these official Codex C
 
 | Installation | CLI path |
 | --- | --- |
-| Current ChatGPT app | `/Applications/ChatGPT.app/Contents/Resources/codex` |
-| Legacy Codex app | `/Applications/Codex.app/Contents/Resources/codex` |
-| Standalone CLI | An executable `codex` in `PATH` |
+| Current bundled CLI | `Contents/Resources/codex-cli/bin/codex` inside `ChatGPT.app` or `Codex.app` |
+| Native bundled fallback | `Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex` |
+| Older app layout | `Contents/Resources/codex` |
+| Standalone CLI | `PATH`, Homebrew, `~/.local/bin`, Volta, or nvm installations |
+
+The local development build checks system and user Applications folders and
+rediscovers the CLI on refresh. Finder launches do not require shell startup
+files to expose nvm. These discovery changes are not a new published release.
+
+## Local dictation patch management
+
+The local development build adds a Dictation Patch tab for status, supported build,
+backup readiness, enable/disable, and interrupted-transaction recovery. It calls the
+prepared local `codex-dictation-research/dictation-patch.mjs` tool; the resource folder
+can be changed in the UI. Official application bundles are not included in this repository.
+The local tool is not bundled; see the [tool protocol and trust requirements](docs/DICTATION_PATCH_PROTOCOL.md).
+
+Enabling replaces the installed Codex with a locally signed build. Permissions or
+sign-in may be requested again, and some system integrations may be unavailable.
+Disabling restores the official backup. Account/workspace checks remain intact, and
+real transcription still requires manual verification. This is a local development
+feature, not a new public release.
 
 ## Privacy and security
 

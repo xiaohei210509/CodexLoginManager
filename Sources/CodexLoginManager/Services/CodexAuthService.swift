@@ -2,31 +2,37 @@ import AppKit
 import Foundation
 
 struct CodexAuthService: Sendable {
-    let paths: CodexPaths
+    private let configuredPaths: CodexPaths?
     private let runner: ProcessRunner
 
+    var paths: CodexPaths { configuredPaths ?? .standard }
+
     init(
-        paths: CodexPaths = .standard,
+        paths: CodexPaths? = nil,
         runner: ProcessRunner = ProcessRunner()
     ) {
-        self.paths = paths
+        self.configuredPaths = paths
         self.runner = runner
     }
 
     func checkStatus() async -> AuthStatus {
+        await checkStatus(paths: paths)
+    }
+
+    private func checkStatus(paths: CodexPaths) async -> AuthStatus {
         guard FileManager.default.isExecutableFile(atPath: paths.codexCLIPath) else {
             return AuthStatus(
                 kind: .missingCLI,
                 title: L10n.text("status.missing_cli.title"),
                 message: L10n.text("status.missing_cli.message"),
-                localAuthSummary: readLocalAuthSummary().displayText,
+                localAuthSummary: readLocalAuthSummary(paths: paths).displayText,
                 cliStatus: paths.displayCLIPath,
                 paths: paths,
                 checkedAt: Date()
             )
         }
 
-        let localAuth = readLocalAuthSummary()
+        let localAuth = readLocalAuthSummary(paths: paths)
         let cliResult: Result<ProcessResult, Error>
 
         do {
@@ -40,17 +46,18 @@ struct CodexAuthService: Sendable {
             cliResult = .failure(error)
         }
 
-        return makeStatus(localAuth: localAuth, cliResult: cliResult)
+        return makeStatus(paths: paths, localAuth: localAuth, cliResult: cliResult)
     }
 
     func startLogin() async -> (status: AuthStatus, log: String) {
+        let paths = self.paths
         guard FileManager.default.isExecutableFile(atPath: paths.codexCLIPath) else {
             return (
                 status: AuthStatus(
                     kind: .missingCLI,
                     title: L10n.text("status.missing_cli.title"),
                     message: L10n.text("status.missing_cli.login_message"),
-                    localAuthSummary: readLocalAuthSummary().displayText,
+                    localAuthSummary: readLocalAuthSummary(paths: paths).displayText,
                     cliStatus: paths.displayCLIPath,
                     paths: paths,
                     checkedAt: Date()
@@ -66,7 +73,7 @@ struct CodexAuthService: Sendable {
                 timeoutSeconds: nil
             )
 
-            let refreshed = await checkStatus()
+            let refreshed = await checkStatus(paths: paths)
             let output = Redactor.sanitize(result.combinedOutput)
             let prefix = result.exitCode == 0
                 ? L10n.text("status.login.finished")
@@ -74,7 +81,7 @@ struct CodexAuthService: Sendable {
 
             return (status: refreshed, log: "\(prefix)\n\(output)")
         } catch {
-            let refreshed = await checkStatus()
+            let refreshed = await checkStatus(paths: paths)
             return (
                 status: AuthStatus(
                     kind: .failed,
@@ -92,11 +99,13 @@ struct CodexAuthService: Sendable {
 
     @MainActor
     func openCodexApp() {
+        let paths = self.paths
         guard paths.canOpenCodexApp else { return }
         NSWorkspace.shared.open(URL(fileURLWithPath: paths.codexAppPath))
     }
 
     private func makeStatus(
+        paths: CodexPaths,
         localAuth: LocalAuthSummary,
         cliResult: Result<ProcessResult, Error>
     ) -> AuthStatus {
@@ -193,7 +202,7 @@ struct CodexAuthService: Sendable {
         }
     }
 
-    private func readLocalAuthSummary() -> LocalAuthSummary {
+    private func readLocalAuthSummary(paths: CodexPaths) -> LocalAuthSummary {
         guard FileManager.default.fileExists(atPath: paths.authPath) else {
             return LocalAuthSummary(kind: .missing, displayText: L10n.text("auth.missing"))
         }

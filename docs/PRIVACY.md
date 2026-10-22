@@ -22,9 +22,11 @@ present.
 
 The application also checks local filesystem paths to locate a Codex CLI in:
 
-- `/Applications/ChatGPT.app/Contents/Resources/codex`
-- `/Applications/Codex.app/Contents/Resources/codex`
-- An executable `codex` found on `PATH`
+- `ChatGPT.app` and `Codex.app` in system or user Applications folders, including
+  the current `Contents/Resources/codex-cli/bin/codex` wrapper, its native
+  `CodexCLI.app` executable, and the older `Contents/Resources/codex` layout.
+- An executable `codex` found on `PATH` or in common Homebrew, user-local,
+  Volta, and nvm installation directories.
 
 ## Commands the Application Runs
 
@@ -34,15 +36,33 @@ CLI:
 - `codex login status` verifies the current login state.
 - `codex login` starts the official browser-based login flow.
 
-The CLI process runs with the current user's home directory and a restricted,
-standard executable search path. CodexLoginManager captures the process output
-to show status and diagnostics in the interface.
+The CLI process runs with the current user's home directory and a restricted
+executable search path: the selected executable's directory followed by standard
+system and Homebrew directories. This lets nvm/npm entrypoints find their sibling
+Node runtime without sourcing shell profiles. CodexLoginManager captures the
+process output to show status and diagnostics in the interface.
 
 The official CLI and browser flow may communicate with OpenAI services. Those
 network requests are made by the official tools, not by a server operated by
 this project.
 
 ## Data the Application Writes
+
+The local development build also offers a Dictation Patch tab. It calls a
+user-selected local `dictation-patch.mjs` tool with a structured status, enable,
+disable, or recover command. Status reads application metadata, ASAR hashes,
+backup presence, filesystem permissions, and process executable paths. It does
+not read audio or account tokens for patch management.
+
+Enable/disable/recovery may replace the installed Codex application using the
+tool's local backup, staging, signature checks, transaction journal and rollback.
+Enabling uses a locally signed client and may affect system permissions or
+team-bound integrations. This is an explicit user action, not part of login
+diagnostics. Patch resources and official application backups remain outside
+this repository; they are not bundled or uploaded.
+
+The selected patch resource directory and the selected UI tab are persisted in
+local application preferences. Patch output is sanitized before display.
 
 CodexLoginManager does not directly write `~/.codex/auth.json` or
 `~/.codex/config.toml`. The official `codex login` command may update the Codex

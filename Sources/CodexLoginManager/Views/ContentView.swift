@@ -2,34 +2,41 @@ import SwiftUI
 
 struct ContentView: View {
     @ObservedObject var viewModel: AuthViewModel
+    var patchBusy = false
+    var showsToolbar = true
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            header
-            statusPanel
-            actionRow
-            detailGrid
-            logPanel
-            Spacer(minLength: 0)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                header
+                statusPanel
+                actionRow
+                detailGrid
+                logPanel
+                Spacer(minLength: 0)
+            }
+            .padding(24)
         }
-        .padding(24)
+        .disabled(patchBusy)
         .toolbar {
-            ToolbarItemGroup {
-                Button {
-                    Task { await viewModel.refresh() }
-                } label: {
-                    Label(L10n.text("toolbar.refresh"), systemImage: "arrow.clockwise")
-                }
-                .help(L10n.text("toolbar.refresh_help"))
-                .disabled(viewModel.isBusy)
+            if showsToolbar {
+                ToolbarItemGroup {
+                    Button {
+                        Task { await viewModel.refresh() }
+                    } label: {
+                        Label(L10n.text("toolbar.refresh"), systemImage: "arrow.clockwise")
+                    }
+                    .help(L10n.text("toolbar.refresh_help"))
+                    .disabled(viewModel.isBusy || patchBusy)
 
-                Button {
-                    Task { await viewModel.startLogin() }
-                } label: {
-                    Label(L10n.text("toolbar.login"), systemImage: "key.fill")
+                    Button {
+                        Task { await viewModel.startLogin() }
+                    } label: {
+                        Label(L10n.text("toolbar.login"), systemImage: "key.fill")
+                    }
+                    .help(L10n.text("toolbar.login_help"))
+                    .disabled(!viewModel.canStartLogin || patchBusy)
                 }
-                .help(L10n.text("toolbar.login_help"))
-                .disabled(!viewModel.canStartLogin)
             }
         }
     }

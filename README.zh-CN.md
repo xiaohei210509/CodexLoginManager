@@ -29,7 +29,7 @@ Codex 登录管理会显示 Codex CLI 实际正在使用 ChatGPT OAuth、API key
 ## 为什么不只运行一条 `codex login`？
 
 - 明确区分 ChatGPT OAuth 和 API key 模式。
-- 显示实际命中的 `ChatGPT.app`、旧 `Codex.app` 或 `PATH` 中的 CLI。
+- 显示实际命中的 `ChatGPT.app`、`Codex.app`、`PATH` 或常见独立安装目录中的 CLI。
 - 区分 `~/.codex/auth.json` 缺失、损坏、不完整和过期等状态。
 - 启动官方浏览器登录，并在流程结束后自动重新检查。
 - 在界面显示前脱敏已知的 API key、OAuth token 和 JWT 格式，降低意外暴露风险。
@@ -48,9 +48,26 @@ Codex 登录管理会显示 Codex CLI 实际正在使用 ChatGPT OAuth、API key
 
 | 安装方式 | CLI 路径 |
 | --- | --- |
-| 当前 ChatGPT app | `/Applications/ChatGPT.app/Contents/Resources/codex` |
-| 旧 Codex app | `/Applications/Codex.app/Contents/Resources/codex` |
-| 独立 CLI | `PATH` 中可执行的 `codex` |
+| 当前 app 内置 CLI | `ChatGPT.app` 或 `Codex.app` 中的 `Contents/Resources/codex-cli/bin/codex` |
+| 内置原生程序回退 | `Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex` |
+| 旧版 app 布局 | `Contents/Resources/codex` |
+| 独立 CLI | `PATH`、Homebrew、`~/.local/bin`、Volta 或 nvm 安装目录 |
+
+本地开发版同时检查系统和用户的 Applications 目录，每次刷新都会重新查找 CLI。
+从 Finder 启动也无需先加载 shell 配置才能找到 nvm；这些改动尚未发布为新版。
+
+## 本地听写补丁管理
+
+本地开发版新增“听写补丁”页面，可查看补丁状态、支持版本和备份状态，
+并在 Codex 完全退出后开启、关闭或恢复中断的切换。原来的登录页面保持独立。
+它调用本机已准备的 `codex-dictation-research/dictation-patch.mjs` 工具，
+可以通过页面中的文件夹按钮选择资源目录；没有把官方安装包放入本项目。
+本地工具本身也不随应用打包，接口和安全边界见[补丁工具协议](docs/DICTATION_PATCH_PROTOCOL.md)。
+
+开启补丁会改变 Codex 安装并使用本地签名，可能需要重新授予权限或登录，
+部分系统集成可能不可用；关闭恢复官方备份。账号和工作区限制不变，
+真实转写仍须手动验证。本功能与仅诊断登录态的原公开 beta 范围不同，
+目前没有发布新版或上传补丁产物。
 
 ## 隐私与安全
 

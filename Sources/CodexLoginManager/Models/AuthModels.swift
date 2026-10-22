@@ -7,8 +7,25 @@ struct CodexPaths: Equatable, Sendable {
     let configPath: String
 
     static var standard: CodexPaths {
-        let home = FileManager.default.homeDirectoryForCurrentUser
-        let install = resolvedCodexInstall()
+        discover()
+    }
+
+    static func discover(
+        homeDirectory home: URL = FileManager.default.homeDirectoryForCurrentUser,
+        environment: [String: String] = ProcessInfo.processInfo.environment,
+        appCandidates: [String]? = nil,
+        fallbackDirectories: [String] = ["/opt/homebrew/bin", "/usr/local/bin"]
+    ) -> CodexPaths {
+        let apps = appCandidates ?? [
+            "/Applications/ChatGPT.app",
+            "/Applications/Codex.app",
+            home.appendingPathComponent("Applications/Codex.app").path,
+            home.appendingPathComponent("Applications/ChatGPT.app").path,
+        ]
+        let install = resolvedCodexInstall(
+            home: home, environment: environment, apps: apps,
+            fallbackDirectories: fallbackDirectories
+        )
         return CodexPaths(
             codexCLIPath: install.cliPath,
             codexAppPath: install.appPath,
@@ -42,50 +59,69 @@ struct CodexPaths: Equatable, Sendable {
         return "~" + path.dropFirst(homePath.count)
     }
 
-    private static func resolvedCodexInstall() -> (cliPath: String, appPath: String) {
+    private static func resolvedCodexInstall(
+        home: URL, environment: [String: String], apps: [String],
+        fallbackDirectories: [String]
+    ) -> (cliPath: String, appPath: String) {
         let fileManager = FileManager.default
-        let appCandidates = [
-            "/Applications/ChatGPT.app",
-            "/Applications/Codex.app"
+        let bundledLocations = [
+            "Contents/Resources/codex-cli/bin/codex",
+            "Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex",
+            "Contents/Resources/codex",
         ]
 
-        for appPath in appCandidates {
-            let cliPath = URL(fileURLWithPath: appPath)
-                .appendingPathComponent("Contents/Resources/codex")
-                .path
-
-            if fileManager.isExecutableFile(atPath: cliPath) {
-                return (cliPath: cliPath, appPath: appPath)
+        for appPath in apps {
+            for location in bundledLocations {
+                let cliPath = URL(fileURLWithPath: appPath)
+                    .appendingPathComponent(location).path
+                if fileManager.isExecutableFile(atPath: cliPath) {
+                    return (cliPath: cliPath, appPath: appPath)
+                }
             }
         }
 
-        if let cliPath = executablePath(named: "codex") {
-            let appPath = appCandidates.first { fileManager.fileExists(atPath: $0) } ?? appCandidates[0]
-            return (cliPath: cliPath, appPath: appPath)
+        let appPath = apps.first { fileManager.fileExists(atPath: $0) }
+            ?? apps.first ?? "/Applications/Codex.app"
+        var directories = (environment["PATH"] ?? "")
+            .split(separator: ":").map(String.init)
+        directories += fallbackDirectories
+        directories += [
+            home.appendingPathComponent(".local/bin").path,
+            home.appendingPathComponent(".volta/bin").path,
+            home.appendingPathComponent(".nvm/current/bin").path,
+        ]
+        if let nvmBin = environment["NVM_BIN"] { directories.append(nvmBin) }
+        let nvmRoot = environment["NVM_DIR"].map { URL(fileURLWithPath: $0) }
+            ?? home.appendingPathComponent(".nvm")
+        let versions = nvmRoot.appendingPathComponent("versions/node")
+        if let entries = try? fileManager.contentsOfDirectory(
+            at: versions, includingPropertiesForKeys: nil
+        ) {
+            directories += entries
+                .filter { $0.lastPathComponent.hasPrefix("v") }
+                .sorted {
+                    $0.lastPathComponent.compare($1.lastPathComponent, options: .numeric)
+                        == .orderedDescending
+                }
+                .map {
+                    versions.appendingPathComponent($0.lastPathComponent)
+                        .appendingPathComponent("bin").path
+                }
+        }
+
+        for directory in directories where directory.hasPrefix("/") {
+            let candidate = URL(fileURLWithPath: directory)
+                .appendingPathComponent("codex").path
+            if fileManager.isExecutableFile(atPath: candidate) {
+                return (cliPath: candidate, appPath: appPath)
+            }
         }
 
         return (
-            cliPath: "/Applications/ChatGPT.app/Contents/Resources/codex",
-            appPath: "/Applications/ChatGPT.app"
+            cliPath: URL(fileURLWithPath: appPath)
+                .appendingPathComponent(bundledLocations[0]).path,
+            appPath: appPath
         )
-    }
-
-    private static func executablePath(named name: String) -> String? {
-        let fileManager = FileManager.default
-        let pathValue = ProcessInfo.processInfo.environment["PATH"]
-            ?? "/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin:/usr/local/bin"
-
-        for directory in pathValue.split(separator: ":").map(String.init) {
-            let candidate = URL(fileURLWithPath: directory)
-                .appendingPathComponent(name)
-                .path
-
-            if fileManager.isExecutableFile(atPath: candidate) {
-                return candidate
-            }
-        }
-
-        return nil
     }
 }
 
