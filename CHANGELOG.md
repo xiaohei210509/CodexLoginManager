@@ -6,6 +6,41 @@ All notable changes to this project are documented here. The format follows
 
 ## [Unreleased]
 
+## [1.0.0-beta.4] - 2026-10-24
+
+### Added
+
+- Embed an adaptive native dictation patch engine and Acorn structural parser. Prepare
+  official backups and locally signed patch copies from the installed client;
+  no external script, Node.js, resource picker, or prebuilt Codex copy is needed.
+- Keep backups in Application Support with process locking, transactional swaps,
+  rollback, and interrupted-change recovery. Refuse unrecognized app hashes.
+- Add isolated real-app round-trip coverage, alongside transaction safety tests.
+- Generate independent per-build plans and backups; locate native integrity
+  slots from Mach-O sections rather than hardcoded offsets.
+- Show Update Codex only when the official stable feed offers an eligible update.
+  Verify full ZIP length/Ed25519 and OpenAI signatures; download with progress and
+  cancellation, request normal quit, transactionally install, and reopen.
+- Reapply enabled compatible patches after updates, retaining the official new
+  build with a warning if adaptation fails. Pin whole-bundle recovery identities.
+
+### Fixed
+
+- Use the fixed `plan_type=plus` update-query setting instead of `unknown`,
+  while keeping `beta=false` and a manager-specific installation UUID.
+  This does not detect or change an account subscription.
+- Drain subprocess stdout and stderr concurrently to prevent pipe-buffer
+  deadlocks during patch inspection and verbose tool execution.
+
+### Distribution
+
+- Include the patch engine, structural parser, rules, and third-party license
+  in the universal macOS app. Official or modified Codex app copies are not
+  distributed.
+- Publish complete English and Simplified Chinese release notes from a
+  version-controlled release-notes file.
+- Keep the community prerelease ad-hoc signed and explicitly not Apple-notarized.
+
 ## [1.0.0-beta.3] - 2026-10-22
 
 ### Added
@@ -99,7 +134,8 @@ All notable changes to this project are documented here. The format follows
 - Downloadable beta archives are ad-hoc signed and explicitly identified as not
   Apple-notarized.
 
-[Unreleased]: https://github.com/xiaohei210509/CodexLoginManager/compare/v1.0.0-beta.3...HEAD
+[Unreleased]: https://github.com/xiaohei210509/CodexLoginManager/compare/v1.0.0-beta.4...HEAD
+[1.0.0-beta.4]: https://github.com/xiaohei210509/CodexLoginManager/compare/v1.0.0-beta.3...v1.0.0-beta.4
 [1.0.0-beta.3]: https://github.com/xiaohei210509/CodexLoginManager/compare/v1.0.0-beta.2...v1.0.0-beta.3
 [1.0.0-beta.2]: https://github.com/xiaohei210509/CodexLoginManager/compare/v1.0.0-beta.1...v1.0.0-beta.2
 [1.0.0-beta.1]: https://github.com/xiaohei210509/CodexLoginManager/releases/tag/v1.0.0-beta.1

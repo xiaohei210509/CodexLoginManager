@@ -87,6 +87,19 @@ for localization in en zh-Hans; do
   fi
 done
 
+if [[ ! -f "$APP_RESOURCES/$RESOURCE_BUNDLE_NAME/Contents/Resources/dictation-recipe.json" \
+   && ! -f "$APP_RESOURCES/$RESOURCE_BUNDLE_NAME/dictation-recipe.json" ]]; then
+  echo "Required embedded dictation recipe is missing from the app bundle." >&2
+  exit 1
+fi
+
+for embedded_resource in acorn.js dictation-locator.js Acorn-LICENSE.txt; do
+  if [[ -z "$(find "$APP_RESOURCES/$RESOURCE_BUNDLE_NAME" -type f -name "$embedded_resource" -print -quit)" ]]; then
+    echo "Required adaptive patch resource is missing: $embedded_resource" >&2
+    exit 1
+  fi
+done
+
 cat >"$INFO_PLIST" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">

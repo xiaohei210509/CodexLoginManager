@@ -62,14 +62,23 @@ invalidate a credential that has already been disclosed.
 
 ## Security Boundaries
 
-The Dictation Patch tab, included starting with v1.0.0-beta.3, executes a selected local patch tool.
+The current-source Dictation Patch tab uses a built-in native engine and a
+structural parser, replacing beta.3's external-script interface.
 Unlike login diagnostics, enable/disable/recover explicitly modify the installed
 Codex application. The tool requires a supported build and a stopped Codex UI,
 validates staged code signatures, retains account/workspace checks, and supports
 rollback. Enabling uses local signing rather than OpenAI's release identity;
-permissions and some system integrations may be affected. Use only patch
-resources you trust. Downloadable releases include the management interface only;
-the external tool, original backups, and patched Codex bundles are not distributed.
+permissions and some system integrations may be affected. The engine checks the
+official signing identity and exact ASAR/framework hashes before preparing
+local copies. Original backups and patched Codex bundles are not distributed.
+Each build has an independently derived plan and verified original backup.
+Unknown/ambiguous code structures are refused. The official-update path is a
+separate confirmed operation: it validates HTTPS endpoints, full archive length
+and pinned Ed25519 signature before extraction, then the OpenAI signature and
+advertised app version/build/architecture. It uses full archives, not deltas,
+normal termination only, fingerprint-pinned replacement, and local snapshots.
+If reapplication fails, the verified official update is retained with a warning.
+The embedded engine is not yet included in a published release.
 
 CodexLoginManager:
 

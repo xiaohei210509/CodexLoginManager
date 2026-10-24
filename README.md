@@ -59,19 +59,35 @@ files to expose nvm.
 
 ## Local dictation patch management
 
-Version v1.0.0-beta.3 adds a Dictation Patch tab for status, supported build,
-backup readiness, enable/disable, and interrupted-transaction recovery. It calls the
-prepared local `codex-dictation-research/dictation-patch.mjs` tool; the resource folder
-can be changed in the UI. Official application bundles are not included in this repository.
-The local tool is not bundled; see the [tool protocol and trust requirements](docs/DICTATION_PATCH_PROTOCOL.md).
+Starting with v1.0.0-beta.4, the app embeds an adaptive native Dictation Patch engine and parser.
+No Node.js, external script, resource-folder selection, or prepared app
+copy is needed. The first enable creates a verified official backup and a patched
+copy from the installed official client on this Mac. The tab supports status,
+enable/disable, interrupted-transaction recovery, and official Codex updates.
+
+The engine recognizes code structure rather than pinning every version or
+minified filename. It creates separate verified backups for each build. Ambiguous
+or changed structures and unrecognized modifications are refused; substantial
+upstream changes may require new patch rules. Beta.3 and older downloads use the
+previous external-tool interface; download beta.4 or newer for the embedded engine.
+
+An Update Codex button appears only when the official stable feed offers a newer
+compatible build. After confirmation it downloads the full official ZIP, verifies
+its Ed25519 signature and OpenAI application signature, requests a normal quit,
+updates, and reopens Codex. An enabled patch is reapplied if compatible; otherwise
+the official update is retained with a warning. No force-quit is used.
+Update checks use fixed `plan_type=plus` and `beta=false` parameters, not the
+account's detected subscription. They do not read account credentials or
+guarantee the same offer as the official client's personalized update check.
 
 Enabling replaces the installed Codex with a locally signed build. Permissions or
 sign-in may be requested again, and some system integrations may be unavailable.
 Disabling restores the official backup. Account/workspace checks remain intact, and
-real transcription still requires manual verification. The downloadable app includes
-the management interface only, not a ready-to-use dictation patch. Without a
-separately prepared trusted tool, the patch tab reports missing resources while
-login diagnostics remain available. This is not a system-wide dictation app.
+real transcription still requires manual verification. Backups and generated
+copies live in `~/Library/Application Support/CodexLoginManager/DictationPatch`;
+allow several GB of free space. Official or modified Codex bundles are never
+shipped in this repository or manager download. This is not a system-wide
+dictation app. See [engine safety details](docs/DICTATION_PATCH_PROTOCOL.md).
 
 ## Privacy and security
 
@@ -99,7 +115,7 @@ Other useful commands:
 swift test --disable-index-store -j 1
 ./script/build_and_run.sh --build
 ./script/build_and_run.sh --verify
-./script/package_release.sh 1.0.0-beta.3
+./script/package_release.sh 1.0.0-beta.4
 ```
 
 The app follows the macOS language setting and currently includes English and Simplified Chinese. GitHub Actions runs unit tests, builds the app bundle, verifies its signature, and packages tagged universal releases.

@@ -1,0 +1,15 @@
+{
+  "version": "26.1016.51333",
+  "memberPath": "webview/assets/app-initial-f3e281fb9a71.js",
+  "originalArchiveSha256": "9d0260dd37f9c45546d5a89d9d782b8362c9957b70b992e2c3f91df60a046b07",
+  "patchedArchiveSha256": "4b2e50632f46fafea03239e49802e0f3a99a79f23349146e3f379447f6604864",
+  "originalHeaderSha256": "454ce29c0bc1a4bcbfc30504d8713a283d7d8afb08209b2aed8b066b2c6bff20",
+  "patchedHeaderSha256": "4896b130085ff636986c7f821ee8499d1f5fa4085b9281e50776c4e5899940e2",
+  "before": "dictation:{accessPolicy:`workspace-dictation`,requiresFirstPartyInference:!0,configFeatures:",
+  "after": "dictation:{accessPolicy:`workspace-dictation`,requiresFirstPartyInference:!1,configFeatures:",
+  "originalFrameworkSha256": "faa41a6381c072cf645f74420f25f967f5668f0d28aa9928dbf7a71872178cf4",
+  "patchedUnsignedFrameworkSha256": "3eb324653c556cb56943e9d7dbbc02473fcf707f8dadd9c4c44a7a88582b07ad",
+  "slotOffset": 267315760,
+  "originalDigest": "738ca74cdd8c675cd9c39464400979eff71ac12bab16fa7ec542e4bf8eb7c37c",
+  "patchedDigest": "c8397d00ab1af533f4a4adb39f3e2d1a847d24cc271462ce8be6a3705c2a0658"
+}

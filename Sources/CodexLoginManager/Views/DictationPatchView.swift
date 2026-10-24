@@ -1,5 +1,4 @@
 import SwiftUI
-import UniformTypeIdentifiers
 
 struct DictationPatchView: View {
     @ObservedObject var viewModel: DictationPatchViewModel
@@ -42,6 +41,11 @@ struct DictationPatchView: View {
                     .foregroundStyle(.red)
                     .accessibilityIdentifier("patch.error")
                 }
+                if let message = viewModel.updateErrorMessage {
+                    Label(message, systemImage: "network.slash")
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
                 toolSection
                 if !viewModel.activityLog.isEmpty {
                     VStack(alignment: .leading, spacing: 8) {
@@ -58,11 +62,6 @@ struct DictationPatchView: View {
             }
             .padding(24)
         }
-        .fileImporter(isPresented: $viewModel.choosingDirectory, allowedContentTypes: [.folder]) { result in
-            if case let .success(url) = result {
-                Task { await viewModel.selectToolDirectory(url) }
-            }
-        }
         .confirmationDialog(
             viewModel.pendingCommand?.title ?? "",
             isPresented: Binding(
@@ -78,6 +77,19 @@ struct DictationPatchView: View {
             Button(L10n.text("patch.cancel"), role: .cancel) { viewModel.pendingCommand = nil }
         } message: {
             Text(L10n.text(viewModel.pendingCommand == .on ? "patch.confirm_on" : "patch.confirm_restore"))
+        }
+        .confirmationDialog(L10n.text("update.title"), isPresented: $viewModel.pendingUpdate, titleVisibility: .visible) {
+            Button(L10n.text("update.title")) { viewModel.confirmUpdate() }
+                .disabled(loginBusy || !viewModel.canUpdate)
+            Button(L10n.text("patch.cancel"), role: .cancel) {}
+        } message: {
+            Text(L10n.text("update.confirm"))
+        }
+        .task {
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(1800))
+                if !Task.isCancelled && !loginBusy { await viewModel.refresh() }
+            }
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { Task { await viewModel.refresh() } }
@@ -121,10 +133,13 @@ struct DictationPatchView: View {
                     Button(L10n.text("patch.command.recover")) { viewModel.pendingCommand = .recover }
                         .disabled(!viewModel.canRecover || loginBusy)
                 }
+            } else if status.state == .notNeeded {
+                Label(L10n.text("patch.not_needed"), systemImage: "checkmark.shield")
+                    .foregroundStyle(.secondary)
             } else if !status.isSupported {
                 Label(L10n.text("patch.unsupported"), systemImage: "exclamationmark.shield")
                     .foregroundStyle(.orange)
-            } else if !status.officialBackupAvailable || !status.patchedArtifactAvailable {
+            } else if status.state == .on && !status.officialBackupAvailable {
                 Label(L10n.text("patch.artifacts_missing"), systemImage: "externaldrive.badge.exclamationmark")
                     .foregroundStyle(.orange)
             } else if !status.installationWritable {
@@ -142,7 +157,8 @@ struct DictationPatchView: View {
             Grid(alignment: .leading, horizontalSpacing: 24, verticalSpacing: 12) {
                 infoRow("patch.installed_version", status.installedVersion ?? L10n.text("detail.not_completed"))
                 infoRow("patch.supported_version", status.supportedVersion)
-                infoRow("patch.backup", L10n.text(status.officialBackupAvailable ? "patch.ready" : "patch.absent"))
+                infoRow("patch.backup", L10n.text(status.officialBackupAvailable ? "patch.ready"
+                    : status.state == .off ? "patch.backup_automatic" : "patch.absent"))
                 infoRow("patch.app_path", status.installedApp)
             }
             HStack {
@@ -151,6 +167,34 @@ struct DictationPatchView: View {
                 }
                 .disabled(viewModel.isBusy || status.recoveryRequired || status.state == .missing)
                 Spacer()
+                if viewModel.isCheckingUpdates {
+                    ProgressView().controlSize(.small).help(L10n.text("update.checking"))
+                }
+                if let update = viewModel.availableUpdate {
+                    Button { viewModel.pendingUpdate = true } label: {
+                        Label(L10n.text("update.title") + " " + update.version, systemImage: "arrow.down.circle")
+                    }
+                    .accessibilityIdentifier("patch.update")
+                    .disabled(loginBusy || !viewModel.canUpdate)
+                }
+            }
+            if !viewModel.updatePhase.isEmpty {
+                HStack {
+                    if let progress = viewModel.updateProgress {
+                        ProgressView(value: progress).frame(maxWidth: 180)
+                        Text(progress, format: .percent.precision(.fractionLength(0)))
+                            .monospacedDigit().frame(width: 44, alignment: .trailing)
+                    } else {
+                        ProgressView().controlSize(.small)
+                    }
+                    Text(viewModel.updatePhase).foregroundStyle(.secondary)
+                    Spacer()
+                    if viewModel.canCancelUpdate {
+                        Button { viewModel.cancelUpdate() } label: { Image(systemName: "xmark") }
+                            .help(L10n.text("patch.cancel"))
+                            .accessibilityLabel(L10n.text("patch.cancel"))
+                    }
+                }
             }
         }
     }
@@ -169,22 +213,17 @@ struct DictationPatchView: View {
         VStack(alignment: .leading, spacing: 12) {
             Divider()
             HStack {
-                Label(L10n.text("patch.tool"), systemImage: "folder")
+                Label(L10n.text("patch.tool"), systemImage: "checkmark.seal")
                     .font(.headline)
                 Spacer()
-                Button { viewModel.showToolDirectory() } label: {
-                    Image(systemName: "arrow.up.forward.square")
+                Button { viewModel.showBackupDirectory() } label: {
+                    Image(systemName: "folder")
                 }
                 .help(L10n.text("patch.reveal"))
                 .accessibilityLabel(L10n.text("patch.reveal"))
-                Button { viewModel.choosingDirectory = true } label: {
-                    Image(systemName: "folder.badge.gearshape")
-                }
-                .help(L10n.text("patch.choose_directory"))
-                .accessibilityLabel(L10n.text("patch.choose_directory"))
-                .disabled(viewModel.isBusy)
+                .disabled(!FileManager.default.fileExists(atPath: viewModel.storageDirectory.path))
             }
-            Text(CodexPaths.abbreviatingHomeDirectory(in: viewModel.toolDirectory.path))
+            Text(CodexPaths.abbreviatingHomeDirectory(in: viewModel.storageDirectory.path))
                 .font(.system(.caption, design: .monospaced))
                 .foregroundStyle(.secondary)
                 .textSelection(.enabled)

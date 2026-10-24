@@ -47,43 +47,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           release_version="${GITHUB_REF_NAME#v}"
-          changelog_notes="$RUNNER_TEMP/changelog-notes.md"
-          notes_file="$RUNNER_TEMP/release-notes.md"
-
-          awk -v header="## [$release_version]" '
-            index($0, header) == 1 { capture = 1; next }
-            capture && /^## \[/ { exit }
-            capture { print }
-          ' CHANGELOG.md >"$changelog_notes"
-
-          if [[ ! -s "$changelog_notes" ]]; then
-            echo "CHANGELOG.md has no section for $release_version" >&2
+          notes_file="docs/releases/$GITHUB_REF_NAME.md"
+          if [[ ! -s "$notes_file" ]]; then
+            echo "Missing versioned bilingual release notes: $notes_file" >&2
             exit 1
           fi
-
-          cat >"$notes_file" <<'NOTES'
-          Codex Login Manager diagnoses Codex CLI authentication on macOS and starts the official ChatGPT OAuth login flow.
-
-          This community build is open source and ad-hoc signed, but it is not Apple-notarized yet. Try to open it once; if macOS blocks it, open System Settings > Privacy & Security, click Open Anyway for Codex Login Manager, and confirm Open. Never disable Gatekeeper globally.
-
-          The app reads `~/.codex/auth.json` locally, invokes the installed official `codex` CLI, redacts secrets before showing command output, and does not upload credentials or write to `config.toml`.
-
-          ## Dictation Patch Interface
-
-          Starting with v1.0.0-beta.3, the app includes a Dictation Patch management tab. It requires a separately prepared, trusted local `dictation-patch.mjs` tool and compatible local resources. The tool, official app backups, and patched Codex bundles are NOT included in this download. Without those resources, the patch tab reports them missing; login diagnostics still work. This is not a system-wide dictation app.
-
-          Patch actions can replace the installed Codex application and change its signing identity, which may affect permissions, sign-in, or system integrations. Codex must be fully stopped before switching. Transcription service availability is not guaranteed.
-
-          ## 中文说明
-
-          本版支持 Apple Silicon 和 Intel，最低要求 macOS 14。修复新版内置 CLI 路径检测，以及 Finder / nvm 环境下找不到 CLI 的问题。
-
-          新增的听写补丁页仅为管理界面，需另外准备可信的本地工具和匹配资源；下载包不含补丁工具、官方备份或修改版 Codex，也不包含全局听写功能。缺少资源不影响原有登录诊断。切换补丁前必须完全退出 Codex；本地签名可能影响权限、登录或系统集成。
-
-          本项目仍为 ad-hoc 签名、尚未经过 Apple 公证的社区预发布版。不要全局关闭 Gatekeeper；如被阻止，请通过系统设置中的“仍要打开”处理。
-          NOTES
-          printf '\n## Changes in %s\n\n' "$GITHUB_REF_NAME" >>"$notes_file"
-          cat "$changelog_notes" >>"$notes_file"
 
           release_args=(
             release create "$GITHUB_REF_NAME"

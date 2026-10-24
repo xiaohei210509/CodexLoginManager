@@ -3,6 +3,17 @@ import XCTest
 @testable import CodexLoginManager
 
 final class ProcessRunnerTests: XCTestCase, @unchecked Sendable {
+    func testDrainsLargeStdoutAndStderrBeforeWaitingForExit() async throws {
+        let result = try await ProcessRunner().run(
+            executablePath: "/bin/sh",
+            arguments: ["-c", "i=0; while [ \"$i\" -lt 12000 ]; do printf 'stdout line\\n'; printf 'stderr line\\n' >&2; i=$((i+1)); done"],
+            timeoutSeconds: 10
+        )
+        XCTAssertEqual(result.exitCode, 0)
+        XCTAssertEqual(result.stdout.utf8.count, 144000)
+        XCTAssertEqual(result.stderr.utf8.count, 144000)
+    }
+
     func testEnvEntrypointCanFindItsSiblingRuntimeWithSpacesInPath() async throws {
         let manager = FileManager.default
         let directory = manager.temporaryDirectory

@@ -1,7 +1,7 @@
 import Foundation
 
 enum DictationPatchState: String, Codable, Sendable {
-    case on, off, unknown, missing
+    case on, off, notNeeded, unknown, missing
 }
 
 enum DictationPatchCommand: String, Sendable {
@@ -27,8 +27,8 @@ struct DictationPatchStatus: Codable, Equatable, Sendable {
     var isSupported: Bool { state == .on || state == .off }
     var isRunning: Bool { runningProcessCount > 0 }
     var canSwitch: Bool {
-        isSupported && !isRunning && !recoveryRequired && officialBackupAvailable
-            && patchedArtifactAvailable && installationWritable
+        isSupported && !isRunning && !recoveryRequired && installationWritable
+            && (state == .off || officialBackupAvailable)
     }
     var canRecover: Bool { recoveryRequired && !isRunning && installationWritable }
     var title: String { L10n.text("patch.state.\(state.rawValue)") }
@@ -50,11 +50,9 @@ struct DictationPatchResponse: Codable, Sendable {
 }
 
 enum DictationPatchError: LocalizedError {
-    case missingTool, missingNode, unsupportedProtocol, executionFailed(String)
+    case unsupportedProtocol, executionFailed(String)
     var errorDescription: String? {
         switch self {
-        case .missingTool: L10n.text("patch.error.missing_tool")
-        case .missingNode: L10n.text("patch.error.missing_node")
         case .unsupportedProtocol: L10n.text("patch.error.protocol")
         case let .executionFailed(message): message
         }

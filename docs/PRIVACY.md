@@ -48,21 +48,41 @@ this project.
 
 ## Data the Application Writes
 
-Starting with v1.0.0-beta.3, the app also offers a Dictation Patch tab. It calls a
-user-selected local `dictation-patch.mjs` tool with a structured status, enable,
-disable, or recover command. Status reads application metadata, ASAR hashes,
+The current source embeds a native Dictation Patch engine, replacing beta.3's
+external script. Status reads application metadata, ASAR hashes,
 backup presence, filesystem permissions, and process executable paths. It does
 not read audio or account tokens for patch management.
 
 Enable/disable/recovery may replace the installed Codex application using the
-tool's local backup, staging, signature checks, transaction journal and rollback.
+engine's local backup, staging, signature checks, transaction journal and rollback.
 Enabling uses a locally signed client and may affect system permissions or
 team-bound integrations. This is an explicit user action, not part of login
-diagnostics. Patch resources and official application backups remain outside
-this repository; they are not bundled or uploaded.
+diagnostics. Patch logic, a JavaScript parser, and structural rules are embedded.
+Official backups and patched app copies are generated locally under
+`~/Library/Application Support/CodexLoginManager/DictationPatch`; they are
+never bundled or uploaded. Preparation and signing invoke only
+system tools (`ditto`, `xattr`, `codesign`); process checks use `ps`.
 
-The selected patch resource directory and the selected UI tab are persisted in
-local application preferences. Patch output is sanitized before display.
+The patch tab also checks the official stable Codex update feed. HTTPS requests
+send the installed app version, CPU architecture, OS version, `beta=false`,
+the fixed value `plan_type=plus`, and a randomly generated manager-specific UUID
+stored in local preferences. The plan parameter is a fixed update-query setting,
+not a detected account subscription. No account token, project content, chat history, or Codex
+installation identifier is read for update checking. Requests go only to
+`updates.oaistatic.com` and the official `persistent.oaistatic.com` feed path.
+These servers necessarily receive ordinary network metadata such as the IP
+address. Checks run on refresh/activation and periodically while the view is active.
+
+Only after explicit update confirmation does the manager download a full
+official archive, verify its Ed25519 signature, and extract it in a temporary
+directory. It requests a normal quit of the selected Codex app, retains a local
+pre-update snapshot, transactionally installs the verified app, attempts to
+reapply an enabled compatible patch, and reopens Codex. It never force-quits.
+Downloads are cancellable before installation. The workflow uses several GB
+of local disk space. No backup is sent to an external service.
+
+The selected UI tab is persisted in local application preferences. The old
+external resource preference is no longer used. Patch output is sanitized before display.
 
 CodexLoginManager does not directly write `~/.codex/auth.json` or
 `~/.codex/config.toml`. The official `codex login` command may update the Codex

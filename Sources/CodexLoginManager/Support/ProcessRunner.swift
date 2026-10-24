@@ -48,6 +48,15 @@ struct ProcessRunner: Sendable {
                 throw ProcessRunnerError.launchFailed(command: executablePath, underlying: error)
             }
 
+            // Drain both streams while the child runs: ps and verbose tools can
+            // exceed pipe capacity and otherwise block before waitUntilExit.
+            let stdoutTask = Task.detached {
+                stdoutPipe.fileHandleForReading.readDataToEndOfFile()
+            }
+            let stderrTask = Task.detached {
+                stderrPipe.fileHandleForReading.readDataToEndOfFile()
+            }
+
             if let timeoutSeconds {
                 let deadline = Date().addingTimeInterval(timeoutSeconds)
                 while process.isRunning && Date() < deadline {
@@ -62,8 +71,8 @@ struct ProcessRunner: Sendable {
                 process.waitUntilExit()
             }
 
-            let stdoutData = stdoutPipe.fileHandleForReading.readDataToEndOfFile()
-            let stderrData = stderrPipe.fileHandleForReading.readDataToEndOfFile()
+            let stdoutData = await stdoutTask.value
+            let stderrData = await stderrTask.value
 
             let stdout = String(data: stdoutData, encoding: .utf8) ?? ""
             let stderr = String(data: stderrData, encoding: .utf8) ?? ""

@@ -15,15 +15,17 @@ final class DictationPatchTests: XCTestCase {
         )
     }
 
-    func testOnlyStoppedSupportedReadyInstallationCanSwitch() {
+    func testFreshOfficialInstallationCanPrepareWithoutExternalArtifacts() {
         XCTAssertTrue(status().canSwitch)
         XCTAssertTrue(status(state: .on).canSwitch)
         XCTAssertFalse(status(running: 1).canSwitch)
         XCTAssertFalse(status(state: .unknown).canSwitch)
         XCTAssertFalse(status(state: .missing).canSwitch)
+        XCTAssertFalse(status(state: .notNeeded).canSwitch)
         XCTAssertFalse(status(recovery: true).canSwitch)
-        XCTAssertFalse(status(backup: false).canSwitch)
-        XCTAssertFalse(status(artifact: false).canSwitch)
+        XCTAssertTrue(status(backup: false, artifact: false).canSwitch)
+        XCTAssertTrue(status(state: .on, artifact: false).canSwitch)
+        XCTAssertFalse(status(state: .on, backup: false).canSwitch)
         XCTAssertFalse(status(writable: false).canSwitch)
     }
 
@@ -78,47 +80,108 @@ final class DictationPatchTests: XCTestCase {
 }
 
 final class DictationPatchServiceTests: XCTestCase, @unchecked Sendable {
-    func testMissingToolFailsBeforeExecution() async {
-        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-        do {
-            _ = try await DictationPatchService(toolDirectory: directory, nodePath: "/bin/sh").execute(.status)
-            XCTFail("A missing tool must fail")
-        } catch let error as DictationPatchError {
-            guard case .missingTool = error else { return XCTFail("Wrong error: \(error)") }
-        } catch { XCTFail("\(error)") }
+    func testBundledRecipeIsAvailableWithoutNodeOrExternalDirectory() throws {
+        let recipe = try DictationPatchRecipe.bundled()
+        XCTAssertEqual(recipe.version, "26.1016.51333")
+        XCTAssertNotEqual(recipe.originalArchiveSha256, recipe.patchedArchiveSha256)
+        XCTAssertEqual(recipe.before.utf8.count, recipe.after.utf8.count)
+        XCTAssertThrowsError(try recipe.patchArchive(Data()))
+        XCTAssertThrowsError(try recipe.patchArchive(Data("unknown build".utf8)))
     }
 
-    func testReadsJSONWithoutExecutingPatchCommands() async throws {
-        let manager = FileManager.default
-        let directory = manager.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-        try manager.createDirectory(at: directory, withIntermediateDirectories: true)
-        defer { try? manager.removeItem(at: directory) }
-        let script = directory.appendingPathComponent("dictation-patch.mjs")
-        let contents = """
-        test "$1" = "--json" && test "$2" = "status" || exit 3
-        printf '%s\\n' '{"schemaVersion":1,"ok":true,"status":null,"log":"fixture","error":null}'
-        """
-        try contents.write(to: script, atomically: true, encoding: .utf8)
-        let response = try await DictationPatchService(
-            toolDirectory: directory, nodePath: "/bin/sh"
-        ).execute(.status)
+    func testStatusDoesNotNeedOrCreateExternalResources() async throws {
+        let root = FileManager.default.temporaryDirectory.resolvingSymlinksInPath()
+            .appendingPathComponent(UUID().uuidString)
+        let service = DictationPatchService(installedApp: root.appendingPathComponent("missing.app"),
+                                            storageDirectory: root.appendingPathComponent("storage"))
+        let response = try await service.execute(.status)
         XCTAssertTrue(response.ok)
-        XCTAssertEqual(response.log, "fixture")
+        XCTAssertEqual(response.status?.state, .missing)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: root.path))
     }
 
-    func testMissingRuntimeFailsClearly() async throws {
+    func testUnknownInstallationIsNeverModified() async throws {
         let manager = FileManager.default
-        let directory = manager.temporaryDirectory.appendingPathComponent(UUID().uuidString)
-        try manager.createDirectory(at: directory, withIntermediateDirectories: true)
-        defer { try? manager.removeItem(at: directory) }
-        try Data().write(to: directory.appendingPathComponent("dictation-patch.mjs"))
-        do {
-            _ = try await DictationPatchService(
-                toolDirectory: directory, nodePath: "/nonexistent-node"
-            ).execute(.status)
-            XCTFail("A missing runtime must fail")
-        } catch let error as DictationPatchError {
-            guard case .missingNode = error else { return XCTFail("Wrong error: \(error)") }
+        let root = manager.temporaryDirectory.resolvingSymlinksInPath().appendingPathComponent(UUID().uuidString)
+        let app = root.appendingPathComponent("unknown.app")
+        let resources = app.appendingPathComponent("Contents/Resources")
+        try manager.createDirectory(at: resources, withIntermediateDirectories: true)
+        defer { try? manager.removeItem(at: root) }
+        let archive = resources.appendingPathComponent("app.asar")
+        let original = Data("not a supported archive".utf8)
+        try original.write(to: archive)
+        let response = try await DictationPatchService(
+            installedApp: app, storageDirectory: root.appendingPathComponent("storage")
+        ).execute(.on)
+        XCTAssertFalse(response.ok)
+        XCTAssertEqual(response.status?.state, .unknown)
+        XCTAssertEqual(try Data(contentsOf: archive), original)
+    }
+
+    func testLockExcludesConcurrentWritersAndReleasesWithoutStalePID() throws {
+        let directory = FileManager.default.temporaryDirectory.resolvingSymlinksInPath()
+            .appendingPathComponent(UUID().uuidString)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        var first: DictationPatchLock? = try DictationPatchLock(directory: directory)
+        XCTAssertNotNil(first)
+        XCTAssertThrowsError(try DictationPatchLock(directory: directory))
+        first = nil
+        let second = try DictationPatchLock(directory: directory)
+        withExtendedLifetime(second) {}
+    }
+
+    func testLockRefusesSymbolicLinkWithoutTouchingItsTarget() throws {
+        let fm = FileManager.default
+        let root = fm.temporaryDirectory.resolvingSymlinksInPath().appendingPathComponent(UUID().uuidString)
+        try fm.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? fm.removeItem(at: root) }
+        let target = root.appendingPathComponent("untouched")
+        let contents = Data("do not overwrite".utf8)
+        try contents.write(to: target)
+        try fm.createSymbolicLink(at: root.appendingPathComponent("operation.lock"), withDestinationURL: target)
+        XCTAssertThrowsError(try DictationPatchLock(directory: root))
+        XCTAssertEqual(try Data(contentsOf: target), contents)
+    }
+
+    func testRealOfficialFixtureRoundTripWhenExplicitlyProvided() async throws {
+        guard let fixture = ProcessInfo.processInfo.environment["CODEX_PATCH_OFFICIAL_FIXTURE"] else {
+            throw XCTSkip("Set CODEX_PATCH_OFFICIAL_FIXTURE to a verified official app for the isolated integration test.")
         }
+        let fm = FileManager.default
+        let root = fm.temporaryDirectory.resolvingSymlinksInPath()
+            .appendingPathComponent("CodexPatch-integration-\(UUID().uuidString)")
+        try fm.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? fm.removeItem(at: root) }
+        let app = root.appendingPathComponent("Fixture.app")
+        let copied = try await ProcessRunner().run(executablePath: "/usr/bin/ditto", arguments: [fixture, app.path])
+        XCTAssertEqual(copied.exitCode, 0, copied.combinedOutput)
+        _ = try await ProcessRunner().run(executablePath: "/usr/bin/xattr", arguments: ["-cr", app.path])
+        let service = DictationPatchService(installedApp: app, storageDirectory: root.appendingPathComponent("storage"))
+        let initial = try await service.execute(.status)
+        XCTAssertEqual(initial.status?.state, .off)
+        XCTAssertTrue(initial.status?.canSwitch == true)
+        let enabled = try await service.execute(.on)
+        XCTAssertTrue(enabled.ok, enabled.error?.message ?? "")
+        XCTAssertEqual(enabled.status?.state, .on)
+        XCTAssertTrue(enabled.status?.officialBackupAvailable == true)
+        XCTAssertTrue(enabled.status?.patchedArtifactAvailable == true)
+        let disabled = try await service.execute(.off)
+        XCTAssertTrue(disabled.ok, disabled.error?.message ?? "")
+        XCTAssertEqual(disabled.status?.state, .off)
+        let original = try DictationPatchRecipe.fileSHA(URL(fileURLWithPath: fixture)
+            .appendingPathComponent("Contents/Resources/app.asar"))
+        XCTAssertEqual(try DictationPatchRecipe.fileSHA(app.appendingPathComponent("Contents/Resources/app.asar")), original)
+        let signature = try await ProcessRunner().run(executablePath: "/usr/bin/codesign", arguments: ["-dvv", app.path])
+        XCTAssertTrue(signature.stderr.contains("TeamIdentifier=2DC432GLL2"))
+
+        let builds = root.appendingPathComponent("storage/builds")
+        let key = try XCTUnwrap(fm.contentsOfDirectory(atPath: builds.path).first)
+        let planURL = builds.appendingPathComponent(key).appendingPathComponent("plan.json")
+        var plan = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: planURL)) as? [String: Any])
+        plan["patchedDigest"] = "damaged-cache"
+        try JSONSerialization.data(withJSONObject: plan).write(to: planURL)
+        let refused = try await service.execute(.on)
+        XCTAssertFalse(refused.ok, "Corrupt cached digests must be rejected without a crash or app mutation")
+        XCTAssertEqual(try DictationPatchRecipe.fileSHA(app.appendingPathComponent("Contents/Resources/app.asar")), original)
     }
 }
